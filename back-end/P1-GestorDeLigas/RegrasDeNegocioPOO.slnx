@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="../GestorLigas.API/GestorLigas.API.csproj" Id="3206352e-098a-47b7-9876-60c3ffaab617" />
+  <Project Path="RegrasDeNegocioPOO.csproj" Id="b96aa6a1-1340-434d-a1d0-55f4e0f4baa2" />
+</Solution>

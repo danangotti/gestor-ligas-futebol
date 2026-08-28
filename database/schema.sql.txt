@@ -1,0 +1,25 @@
+-- 1. Tabela de Times
+CREATE TABLE IF NOT EXISTS time (
+    id_time SERIAL PRIMARY KEY,
+    nome_time VARCHAR(100) NOT NULL,
+    cidade VARCHAR(100)
+);
+
+-- 2. Tabela de Jogadores
+CREATE TABLE IF NOT EXISTS jogador (
+    id_jogador SERIAL PRIMARY KEY,
+    nome_jogador VARCHAR(100) NOT NULL,
+    posicao VARCHAR(50),
+    numero_camisa INT,
+    id_time INT REFERENCES time(id_time)
+);
+
+-- 3. Tabela de Partidas
+CREATE TABLE IF NOT EXISTS partida (
+    id_partida SERIAL PRIMARY KEY,
+    id_time_mandante INT REFERENCES time(id_time),
+    id_time_visitante INT REFERENCES time(id_time),
+    gols_mandante INT DEFAULT 0,
+    gols_visitante INT DEFAULT 0,
+    finalizada BOOLEAN DEFAULT FALSE
+);

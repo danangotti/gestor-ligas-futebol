@@ -1,0 +1,6 @@
+@GestorLigas.API_HostAddress = http://localhost:5155
+
+GET {{GestorLigas.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

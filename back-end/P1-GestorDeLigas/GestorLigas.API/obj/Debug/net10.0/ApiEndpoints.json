@@ -1,0 +1,111 @@
+[
+  {
+    "ContainingType": "GestorLigas.API.Controllers.ClassificacaoController",
+    "Method": "ObterTabelaClassificacao",
+    "RelativePath": "api/Classificacao",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "GestorLigas.API.Controllers.JogadoresController",
+    "Method": "ObterTodosOsJogadores",
+    "RelativePath": "api/Jogadores",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "GestorLigas.API.Controllers.JogadoresController",
+    "Method": "CadastrarJogador",
+    "RelativePath": "api/Jogadores",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "novoJogador",
+        "Type": "GestorLigas.API.Controllers.JogadoresController\u002BJogadorDTO",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "GestorLigas.API.Controllers.PartidasController",
+    "Method": "ObterTodasAsPartidas",
+    "RelativePath": "api/Partidas",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "GestorLigas.API.Controllers.PartidasController",
+    "Method": "CadastrarPartida",
+    "RelativePath": "api/Partidas",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "novaPartida",
+        "Type": "GestorLigas.API.Controllers.PartidaDTO",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "GestorLigas.API.Controllers.TimesController",
+    "Method": "ObterTodosOsTimes",
+    "RelativePath": "api/Times",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "GestorLigas.API.Controllers.TimesController",
+    "Method": "CadastrarTime",
+    "RelativePath": "api/Times",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "novoTime",
+        "Type": "GestorLigas.API.Controllers.TimesController\u002BTimeDTO",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "GestorLigas.API.Controllers.WeatherForecastController",
+    "Method": "Get",
+    "RelativePath": "WeatherForecast",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": [
+      {
+        "Type": "System.Collections.Generic.IEnumerable\u00601[[GestorLigas.API.WeatherForecast, GestorLigas.API, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ],
+    "EndpointName": "GetWeatherForecast"
+  }
+]
