@@ -2,7 +2,7 @@
 
 Este projeto é uma aplicação de gerenciamento de campeonatos e estatísticas de futebol desenvolvida em **C# (.NET)**, focada nos conceitos de **Programação Orientada a Objetos (POO)**.
 
-> 🚀 **Status do Projeto:** Em desenvolvimento progressivo (Fase 1)
+> 🚀 **Status do Projeto:** Em desenvolvimento progressivo (Fase 3)
 
 ---
 
