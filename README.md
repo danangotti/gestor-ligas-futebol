@@ -1,33 +1,33 @@
-# ⚽ Gestor de Ligas de Futebol
+# ⚽ Liggo — Gestor de Ligas de Futebol
 
-Este projeto é uma aplicação de gerenciamento de campeonatos e estatísticas de futebol desenvolvida em **C# (.NET)**, focada nos conceitos de **Programação Orientada a Objetos (POO)**.
-
-> 🚀 **Status do Projeto:** Em desenvolvimento progressivo (Fase 3)
+Plataforma Web moderna para criação, organização e gerenciamento completo de ligas e campeonatos de futebol. O sistema permite criar ligas, cadastrar equipes e elencos, gerar rodadas de confrontos e acompanhar a tabela de classificação automática e artilharia em tempo real.
 
 ---
 
-## 📌 Funcionalidades Atuais
-- 🏆 **Sessão de Liga Ativa:** Criação e gerenciamento de uma liga personalizada.
-- 🛡️ **Gerenciamento de Times e Elencos:** Cadastro de times e controle de elenco (adição e remoção de jogadores com número de camisa, posição e estatísticas).
-- 📅 **Gerador Automático de Jogos (Round-Robin):** Criação da tabela de confrontos (todos contra todos) automaticamente.
-- ⚽ **Registro Interativo de Partidas:** Apuração de resultados por número da camisa, com controle de gols normais, gols contra e assistências.
-- 📊 **Tabela de Classificação:** Classificação em tempo real com critérios de desempate (Pontos, Vitórias, Saldo de Gols e Gols Pró).
+## 🎨 Identidade Visual & UI/UX
+
+O **Liggo** foi desenhado seguindo a filosofia de um **software SaaS moderno, limpo, esportivo e tecnológico**, evitando a aparência pesada de sites de clubes ou casas de apostas.
+
+* **Marca & Logo:** Palavra *"Liggo"* com o último "o" representado por uma bola de futebol vetorizada e estilizada.
+* **Tipografia:** Manrope (pesos 800 para títulos, 700 para subcabeçalhos e 400/500 para textos gerais).
+* **Paleta Oficial de Cores:**
+  * **Verde Principal (Ações):** `#16A34A`
+  * **Verde Escuro (Hover / Contrastes):** `#166534`
+  * **Texto Principal:** `#111827`
+  * **Texto Secundário:** `#64748B`
+  * **Fundo Principal (Página):** `#F8FAFC`
+  * **Fundo Secundário (Seções):** `#F1F5F9`
+  * **Bordas:** `#E2E8F0`
+  * **Branco:** `#FFFFFF`
 
 ---
 
-## 🛠️ Tecnologias e Conceitos Utilizados
-- **Linguagem:** C# (.NET)
-- **Paradigmas:** Programação Orientada a Objetos (Encapsulamento, Métodos, Construtores, Listas de Objetos)
-- **Estruturas de Dados:** `List<T>`, Manipulação de coleções, Algoritmo de ordenação e busca
+## 🛠️ Tech Stack & Arquitetura
 
----
+A aplicação é dividida em três camadas bem separadas (*Monorepo Modular*):
 
-## 🗺️ Próximos Passos (Roadmap)
-- [ ] Implementação de Tabela de Artilharia e Assistências.
-- [ ] Validação de entradas e tratamento de exceções (`int.TryParse`).
-- [ ] Persistência de dados em arquivos JSON.
-- [ ] Criação de Web API em ASP.NET Core e banco de dados SQL.
-- [ ] Interface gráfica no Front-End utilizando React.
-
----
-*Projeto desenvolvido por um estudante de Sistemas de Informação da PUC Minas - 2 Período*
+```text
+gestor-ligas-futebol/
+├── backend/       # Web API RESTful em C# (.NET 8/9) + ASP.NET Core
+├── database/      # Scripts DDL/DML para PostgreSQL (Chaves Primárias, Foreign Keys e Triggers)
+└── frontend/      # Interface Web em React + Vite + Tailwind CSS v4
