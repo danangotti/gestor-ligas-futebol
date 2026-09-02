@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import logoLiggo from "../assets/LogoLiggo.png";
 
 export function Header() {
@@ -25,12 +26,18 @@ export function Header() {
 
         {/* BLOCO 3: AÇÕES DO USUÁRIO */}
         <div className="flex items-center gap-4">
-          <button className="text-sm font-semibold text-text-primary hover:text-brand-green transition-colors">
-            Entrar
-          </button>
-          <button className="bg-brand-green hover:bg-brand-green-dark text-white font-bold px-4 py-2 rounded-lg text-sm transition-colors shadow-sm">
+         
+           <Link 
+            to="/login" 
+            className="text-sm font-semibold text-text-primary hover:text-brand-green transition-colors"
+          >Entrar
+          </Link>
+
+          <Link
+          to="/cadastro"
+           className="bg-brand-green hover:bg-brand-green-dark text-white font-bold px-4 py-2 rounded-lg text-sm transition-colors shadow-sm">
             Criar conta
-          </button>
+          </Link>
         </div>
 
       </div>

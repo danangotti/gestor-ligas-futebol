@@ -1,6 +1,6 @@
 // src/components/Cta.jsx
 
-export function Cta() {
+export function Cta({onAbrirModal}) {
   return (
     // <section className="max-w-7xl mx-auto px-6 py-12">
     // Centraliza o container na tela com margens respiráveis
@@ -29,7 +29,8 @@ export function Cta() {
         {/* text-brand-green-dark = Texto em verde escuro (#166534) para leitura limpa */}
         {/* hover:bg-green-50 = Transição suave ao passar o mouse */}
         <div className="mt-8 flex justify-center">
-          <button className="bg-white hover:bg-green-50 text-brand-green-dark font-bold px-8 py-4 rounded-lg shadow-md transition-all duration-200 hover:-translate-y-0.5">
+          <button onClick={onAbrirModal}
+           className="bg-white hover:bg-green-50 text-brand-green-dark font-bold px-8 py-4 rounded-lg shadow-md transition-all duration-200 hover:-translate-y-0.5">
             Criar minha liga grátis
           </button>
         </div>

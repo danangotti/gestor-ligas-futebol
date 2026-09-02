@@ -1,6 +1,6 @@
 
 
-export function Hero() {
+export function Hero({onAbrirModal}) {
 return(
 // 1. Tag externa da seção (Fundo cinza claro da paleta: #F8FAFC)
 <section className="bg-bg-primary py-20 px-6">
@@ -30,7 +30,8 @@ Crie ligas, cadastre equipes e jogadores, registre partidas e acompanhe a classi
 
 {/* hover:bg-brand-green-dark altera a cor para o verde escuro #166534 ao passar o mouse. */}
 {/* shadow-sm: Dá uma sombra bem sutil para descolar o botão do fundo. */}
-<button className="bg-brand-green hover:bg-brand-green-dark text-white font-bold px-6 py-3 rounded-lg shadow-sm transition-colors">
+<button onClick={onAbrirModal}
+className="bg-brand-green hover:bg-brand-green-dark text-white font-bold px-6 py-3 rounded-lg shadow-sm transition-colors">
 Criar minha liga</button>
 
 <button className="border border-border-main text-text-primary hover:bg-bg-secondary font-semibold px-6 py-3 rounded-lg transition-colors">
