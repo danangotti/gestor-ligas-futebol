@@ -1,14 +1,21 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
 
+  // Hook responsável pela navegação programática
+  const navegar = useNavigate();
+
   function enviarFormulario(evento) {
     evento.preventDefault();
+
     console.log("Enviando e-mail:", email);
     console.log("Enviando senha:", senha);
+
+    // Redireciona o usuário para a rota do painel
+    navegar("/dashbord");
   }
 
   return (

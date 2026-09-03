@@ -1,14 +1,20 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 export default function PaginaCadastro() {
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
 
+  // Hook do react-router-dom para navegação programática
+  const navegar = useNavigate();
+
   function enviarFormulario(evento) {
     evento.preventDefault();
     console.log("Criando conta para:", nome, email, senha);
+
+    // Redireciona o novo usuário direto para o painel
+    navegar("/dashbord");
   }
 
   return (
