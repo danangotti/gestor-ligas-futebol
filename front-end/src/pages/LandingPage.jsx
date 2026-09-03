@@ -7,13 +7,13 @@ import { CardFuncionalidade } from "../components/CardFuncionalidade";
 import { Cta } from "../components/Cta";
 import { Footer } from "../components/Footer";
 import { useState } from "react";
-import { ModalCriarLiga } from "../components/ModalCriarLiga";
+import { ModalCriarLigaLP } from "../components/ModalCriarLigaLP";
 
 
 export default function LandingPage() {
 
   // Criamos o estado:
-  
+
   // - isModalAberto: começa como 'false' (modal fechado)
   // - setIsModalAberto: função usada para trocar o valor
   const [isModalAberto, setIsModalAberto] = useState(false);
@@ -82,7 +82,7 @@ export default function LandingPage() {
       <Footer />
 
       {/* MODAL CONECTADO AO ESTADO */}
-      <ModalCriarLiga 
+      <ModalCriarLigaLP 
         isOpen={isModalAberto} 
         onClose={() => setIsModalAberto(false)} 
       />
