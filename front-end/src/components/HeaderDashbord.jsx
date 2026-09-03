@@ -1,7 +1,14 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import logoLiggo from "../assets/LogoLiggo.png";
 
 export function HeaderDashbord() {
+    const navegar = useNavigate();
+
+    function fazerLogout(){
+        // Futuramente: limpar token do localStorage aqui
+       navegar("/"); // Redireciona para a Landing Page
+    }
+
   return (
     <header className="w-full bg-white border-b border-border-main py-4 px-6">
       <div className="max-w-6xl mx-auto flex items-center justify-between">
@@ -27,7 +34,8 @@ export function HeaderDashbord() {
          
         <span className="text-sm font-medium text-slate-800">Dan Angotti</span>
 
-        <button className="text-xs text-slate-500 hover:text-red-600 transition-colors">Sair</button>
+        <button onClick={fazerLogout}
+         className="text-xs text-slate-500 hover:text-red-600 transition-colors">Sair</button>
         </div>
 
       </div>

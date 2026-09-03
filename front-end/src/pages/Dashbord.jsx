@@ -126,11 +126,16 @@ export default function PaginaDashbord() {
                   </p>
                 </div>
               
-                <div className="mt-5 pt-4 border-t border-slate-100 flex justify-end">
-                  <button className="text-sm font-medium text-green-600 hover:text-green-700 transition-colors">
-                    Gerenciar Liga &rarr;
-                  </button>
-                </div>
+                {/* RODAPÉ DO CARD: Link navegável */}
+                {/* RODAPÉ DO CARD: Link navegável */}
+<div className="mt-5 pt-4 border-t border-slate-100 flex justify-end">
+  <Link 
+    to={`/liga/${liga.id}`}
+    className="text-sm font-medium text-green-600 hover:text-green-700 transition-colors"
+  >
+    Gerenciar Liga &rarr;
+  </Link>
+</div>
               </div>
             ))}
           </div>
