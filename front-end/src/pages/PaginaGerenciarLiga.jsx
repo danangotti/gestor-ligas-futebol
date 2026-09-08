@@ -1,6 +1,8 @@
 import { useParams, Link } from "react-router-dom";
 import { HeaderDashbord } from "../components/HeaderDashbord";
 import { useState } from "react";
+import { TabelaClassificacao } from "../components/TabelaClassificacao";
+import { ListaPartida } from "../components/ListaPartida";
 
 export default function PaginaGerenciarLiga() {
   // useParams extrai o :id que definimos na rota "/liga/:id"
@@ -26,6 +28,30 @@ export default function PaginaGerenciarLiga() {
       id: 2,
       nome: "Time B",
       cidade: "RJ"
+    }
+  ]);
+
+  // Estado para armazenar os dados da tabela de classificação
+  const [classificacao, setClassificacao] = useState([
+    {
+      idTime: 1,
+      nomeTime: "Time A",
+      pontos: 3,
+      vitorias: 1,
+      empates: 0,
+      derrotas: 0,
+      golsPro: 2,
+      golsSofridos: 1
+    },
+    {
+      idTime: 2,
+      nomeTime: "Time B",
+      pontos: 0,
+      vitorias: 0,
+      empates: 0,
+      derrotas: 1,
+      golsPro: 1,
+      golsSofridos: 2
     }
   ]);
 
@@ -175,15 +201,13 @@ export default function PaginaGerenciarLiga() {
           <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
             <h2 className="font-bold text-lg text-slate-800">Tabela de Classificação</h2>
             <p className="text-sm text-slate-500 mt-1">Aqui construiremos a tabela de pontos corridos.</p>
+            <TabelaClassificacao dados={classificacao} />
           </div>
         )}
 
         {abaAtiva === "partidas" && (
-          <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-            <h2 className="font-bold text-lg text-slate-800">Rodadas e Jogos</h2>
-            <p className="text-sm text-slate-500 mt-1">Aqui listaremos os confrontos gerados.</p>
-          </div>
-        )}
+          <ListaPartida partidas={partidas} />
+          )}
 
         {abaAtiva === "times" && (
           <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
