@@ -3,6 +3,7 @@ import { HeaderDashbord } from "../components/HeaderDashbord";
 import { useState } from "react";
 import { TabelaClassificacao } from "../components/TabelaClassificacao";
 import { ListaPartida } from "../components/ListaPartida";
+import { AbaTimes } from "../components/AbaTimes";
 
 export default function PaginaGerenciarLiga() {
   // useParams extrai o :id que definimos na rota "/liga/:id"
@@ -96,7 +97,43 @@ export default function PaginaGerenciarLiga() {
     // Persiste os jogos gerados no estado local
     setPartidas(novasPartidas);
     console.log("Partidas geradas com sucesso:", novasPartidas);
+  
   }
+
+ function atualizarResultadoPartida(idPartida, golsMandante, golsVisitante) {
+  setPartidas((partidasAnteriores) => {
+    return partidasAnteriores.map((partida) => {
+      if (partida.id === idPartida) {
+      return {
+    ...partida, // copia todos os dados originais da partida que nao precisam sser alteradas
+    golsMandante: Number(golsMandante), // sobrescreve apenas o que mudou
+    golsVisitante: Number(golsVisitante),
+    finalizada: true
+  };
+}
+      else{
+        return partida;
+      }
+    });
+  });
+}
+
+function cadastrarTime(nomeRecebido) {
+
+  if(times.length >= totalTimeEsperados){
+    return alert("Limite de times atingido!")
+  }
+
+  const novoClube = {
+    id: Date.now(),
+    nome: nomeRecebido
+  };
+
+  setTimes((timesAnteriores) => {
+    return [...timesAnteriores, novoClube];
+  });
+}
+
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
@@ -206,14 +243,18 @@ export default function PaginaGerenciarLiga() {
         )}
 
         {abaAtiva === "partidas" && (
-          <ListaPartida partidas={partidas} />
-          )}
+          <ListaPartida 
+          partidas={partidas} 
+          onSalvarResultado={atualizarResultadoPartida} 
+          />
+            )}
 
         {abaAtiva === "times" && (
-          <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-            <h2 className="font-bold text-lg text-slate-800">Times Participantes</h2>
-            <p className="text-sm text-slate-500 mt-1">Aqui listaremos os clubes inscritos.</p>
-          </div>
+          <AbaTimes
+          times = {times}
+          onAdicionarTime = {cadastrarTime}
+          ligaCheia={podeGerarRodadas}
+          />
         )}
 
       </main>
