@@ -5,6 +5,7 @@ import { TabelaClassificacao } from "../components/TabelaClassificacao";
 import { ListaPartida } from "../components/ListaPartida";
 import { AbaTimes } from "../components/AbaTimes";
 import { ModalElenco }  from "../components/ModalElenco";
+import { TabelaArtilharia } from "../components/TabelaArtilharia";
 
 export default function PaginaGerenciarLiga() {
   // useParams extrai o :id que definimos na rota "/liga/:id"
@@ -76,7 +77,22 @@ export default function PaginaGerenciarLiga() {
   const podeGerarRodadas = times.length === totalTimeEsperados;
 
   // Lista geral de todos os jogadores da liga
-  const [jogadores, setJogadores] = useState([]);
+  const [jogadores, setJogadores] = useState([
+  // Time A (id: 1)
+  { id: 101, idTime: 1, nome: "Carlos Eduardo", numero: "9", posicao: "ATA" },
+  { id: 102, idTime: 1, nome: "Danilo Silva", numero: "10", posicao: "MEI" },
+  { id: 103, idTime: 1, nome: "Lucas Moura", numero: "4", posicao: "DEF" },
+
+  // Time B (id: 2)
+  { id: 201, idTime: 2, nome: "Gabriel Barbosa", numero: "9", posicao: "ATA" },
+  { id: 202, idTime: 2, nome: "Everton Ribeiro", numero: "7", posicao: "MEI" },
+  { id: 203, idTime: 2, nome: "David Luiz", numero: "3", posicao: "DEF" },
+
+  // Time C (id: 3)
+  { id: 301, idTime: 3, nome: "Pedro Raul", numero: "9", posicao: "ATA" },
+  { id: 302, idTime: 3, nome: "Rodrigo Garro", numero: "8", posicao: "MEI" },
+  { id: 303, idTime: 3, nome: "Fagner", numero: "23", posicao: "DEF" },
+]);
 
   // Guarda o objeto do time cujo modal está aberto (se for null, modal fica fechado)
   const [timeSelecionado, setTimeSelecionado] = useState(null);
@@ -374,7 +390,21 @@ const classificacaoOrdenada = [...classificacao].sort((timeA, timeB) => {
           >
             Times
           </button>
+
+          <button
+          type="button"
+          onClick={() => setAbaAtiva("artilharia")}
+          className={`pb-3 text-sm transition-colors relative ${
+                  abaAtiva === "artilharia"
+                  ? "text-green-600 border-b-2 border-green-600 font-semibold"
+                  : "text-slate-500 hover:text-slate-700 font-medium"
+                  }`}
+                  >
+                    Artilharia
+                    </button>
+
         </div>
+        
 
         {/* ÁREA DE CONTEÚDO CONDICIONAL DAS ABAS */}
         {abaAtiva === "classificacao" && (
@@ -411,6 +441,14 @@ const classificacaoOrdenada = [...classificacao].sort((timeA, timeB) => {
     onFechar={() => setTimeSelecionado(null)}
     />
     )}
+
+    {abaAtiva === "artilharia" && (
+  <TabelaArtilharia
+    partidas={partidas}
+    jogadores={jogadores}
+    times={times}
+  />
+)}
 
       </main>
     </div>
