@@ -426,6 +426,7 @@ const classificacaoOrdenada = [...classificacao].sort((timeA, timeB) => {
         {abaAtiva === "times" && (
           <AbaTimes
           times = {times}
+          jogadores = {jogadores}
           onAdicionarTime = {cadastrarTime}
           ligaCheia={podeGerarRodadas}
           onRemoverTime={removerTime}
