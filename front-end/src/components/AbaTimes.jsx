@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-export function AbaTimes({ times, onAdicionarTime, ligaCheia }) {
+export function AbaTimes({ times, onAdicionarTime, ligaCheia, onRemoverTime, setTimeSelecionado }) {
   // Estado para controlar o que o usuário digita no input
   const [novoTimeNome, setNovoTimeNome] = useState("");
 
@@ -65,6 +65,26 @@ export function AbaTimes({ times, onAdicionarTime, ligaCheia }) {
               <span className="text-xs text-slate-400 bg-white px-2 py-0.5 rounded border border-slate-200">
                 Inscrito
               </span>
+
+
+              <button
+              type="button"
+              onClick={() => setTimeSelecionado(time)}
+              className="text-xs border border-slate-300 px-2 py-1 rounded hover:bg-slate-50"
+              >
+              Elenco
+              </button>
+
+              {/* Botão de exclusão */}
+              <button
+              type="button"
+              onClick={() => onRemoverTime(time.id)}
+              className="text-xs text-red-600 hover:text-red-700 hover:bg-red-50 p-1 rounded transition-colors cursor-pointer"
+              title="Remover time"
+        >
+          Remover
+        </button>
+
             </div>
           );
         })}

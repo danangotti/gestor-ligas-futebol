@@ -87,6 +87,7 @@ export function ListaPartida({ partidas, onSalvarResultado }) {
                       type="number"
                       min="0"
                       value={golsMandanteInput}
+                      disabled={partida.finalizada}
                       onChange={(e) => setGolsMandanteInput(e.target.value)}
                       className="w-12 h-9 text-center font-bold border border-slate-300 rounded-lg focus:outline-none focus:border-green-600 bg-slate-50 text-sm"
                       placeholder="0"
@@ -96,6 +97,7 @@ export function ListaPartida({ partidas, onSalvarResultado }) {
                       type="number"
                       min="0"
                       value={golsVisitanteInput}
+                      disabled={partida.finalizada}
                       onChange={(e) => setGolsVisitanteInput(e.target.value)}
                       className="w-12 h-9 text-center font-bold border border-slate-300 rounded-lg focus:outline-none focus:border-green-600 bg-slate-50 text-sm"
                       placeholder="0"
@@ -106,6 +108,7 @@ export function ListaPartida({ partidas, onSalvarResultado }) {
                     <button
                       type="button"
                       onClick={() => handleSalvar(partida.id)}
+                      disabled={partida.finalizada}
                       className="text-xs bg-green-600 hover:bg-green-700 text-white font-semibold px-2.5 py-1 rounded-md transition-colors cursor-pointer"
                     >
                       Salvar
@@ -132,18 +135,18 @@ export function ListaPartida({ partidas, onSalvarResultado }) {
               </span>
             </div>
 
-            {/* Rodapé do Card: Botão exibido apenas em modo visualização */}
-            {!estaEmEdicao && (
+            {/* Rodapé do Card: Botão exibido apenas em modo visualização e se o jogo não foi finalizado */}
+            {!estaEmEdicao && !partida.finalizada && (
               <div className="mt-5 pt-3 border-t border-slate-100 flex justify-end">
                 <button
-                  type="button"
-                  onClick={() => handleIniciarEdicao(partida)}
-                  className="text-xs font-semibold text-green-700 hover:text-green-800 hover:bg-green-50 px-3 py-1.5 rounded-lg border border-green-200 transition-colors cursor-pointer"
-                >
-                  {partida.finalizada ? "Editar Placar" : "Lançar Placar"}
-                </button>
-              </div>
-            )}
+                type="button"
+                onClick={() => handleIniciarEdicao(partida)}
+                className="text-xs font-semibold text-green-700 hover:text-green-800 hover:bg-green-50 px-3 py-1.5 rounded-lg border border-green-200 transition-colors cursor-pointer"
+                 >
+                  Lançar Placar
+                  </button>
+                  </div>
+                )}
           </div>
         );
       })}

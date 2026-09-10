@@ -4,13 +4,14 @@ import { useState } from "react";
 import { TabelaClassificacao } from "../components/TabelaClassificacao";
 import { ListaPartida } from "../components/ListaPartida";
 import { AbaTimes } from "../components/AbaTimes";
+import { ModalElenco } from "../components/ModalElenco";
 
 export default function PaginaGerenciarLiga() {
   // useParams extrai o :id que definimos na rota "/liga/:id"
   const { id } = useParams();
 
   // Meta de participantes definida para a competição
-  const totalTimeEsperados = 2;
+  const totalTimeEsperados = 3;
 
   // Estado para armazenar os confrontos gerados pelo algoritmo
   const [partidas, setPartidas] = useState([]);
@@ -29,6 +30,11 @@ export default function PaginaGerenciarLiga() {
       id: 2,
       nome: "Time B",
       cidade: "RJ"
+    },
+    {
+      id: 3,
+      nome: "Time C",
+      cidade: "RJ"
     }
   ]);
 
@@ -37,12 +43,12 @@ export default function PaginaGerenciarLiga() {
     {
       idTime: 1,
       nomeTime: "Time A",
-      pontos: 3,
-      vitorias: 1,
+      pontos: 0,
+      vitorias: 0,
       empates: 0,
       derrotas: 0,
-      golsPro: 2,
-      golsSofridos: 1
+      golsPro: 0,
+      golsSofridos: 0
     },
     {
       idTime: 2,
@@ -50,14 +56,35 @@ export default function PaginaGerenciarLiga() {
       pontos: 0,
       vitorias: 0,
       empates: 0,
-      derrotas: 1,
-      golsPro: 1,
-      golsSofridos: 2
+      derrotas: 0,
+      golsPro: 0,
+      golsSofridos: 0
+    },
+    {
+      idTime: 3,
+      nomeTime: "Time C",
+      pontos: 0,
+      vitorias: 0,
+      empates: 0,
+      derrotas: 0 ,
+      golsPro: 0,
+      golsSofridos: 0
     }
   ]);
 
   // Variável derivada: avalia se a meta de times foi atingida para habilitar a geração de jogos
   const podeGerarRodadas = times.length === totalTimeEsperados;
+
+  // Lista geral de todos os jogadores da liga
+  const [jogadores, setJogadores] = useState([]);
+
+  // Guarda o objeto do time cujo modal está aberto (se for null, modal fica fechado)
+  const [timeSelecionado, setTimeSelecionado] = useState(null);
+
+  function handleAdicionarJogador(novoJogador)
+   {
+  setJogadores((jogadoresAntigos) => [...jogadoresAntigos, novoJogador]);
+   }
 
   // Algoritmo Round-Robin (todos contra todos em turno único sem repetição)
   function gerarPartidas() {
@@ -101,21 +128,90 @@ export default function PaginaGerenciarLiga() {
   }
 
  function atualizarResultadoPartida(idPartida, golsMandante, golsVisitante) {
+  const partidaEncontrada = partidas.find((p) => p.id === idPartida);
+  const golsMandanteNum = Number(golsMandante);
+  const golsVisitanteNum = Number(golsVisitante);
   setPartidas((partidasAnteriores) => {
     return partidasAnteriores.map((partida) => {
       if (partida.id === idPartida) {
       return {
-    ...partida, // copia todos os dados originais da partida que nao precisam sser alteradas
-    golsMandante: Number(golsMandante), // sobrescreve apenas o que mudou
-    golsVisitante: Number(golsVisitante),
-    finalizada: true
-  };
-}
+     ...partida,
+     golsMandante: golsMandanteNum,
+     golsVisitante: golsVisitanteNum,
+     finalizada: true
+     };
+    }
       else{
         return partida;
       }
     });
   });
+
+  setClassificacao((classificacaoAnterior) => {
+  return classificacaoAnterior.map((linha) => {
+    // 1. CASO DO MANDANTE
+    if (linha.idTime === partidaEncontrada.idMandante) {
+      let pontosExtras = 0;
+      let vitoriasExtras = 0;
+      let empatesExtras = 0;
+      let derrotasExtras = 0;
+
+      if (golsMandanteNum > golsVisitanteNum) {
+        pontosExtras = 3;
+        vitoriasExtras = 1;
+      } else if (golsMandanteNum === golsVisitanteNum) {
+        pontosExtras = 1;
+        empatesExtras = 1;
+      } else {
+        derrotasExtras = 1;
+      }
+
+      return {
+        ...linha,
+        jogos: linha.jogos + 1,
+        pontos: linha.pontos + pontosExtras,
+        vitorias: linha.vitorias + vitoriasExtras,
+        empates: linha.empates + empatesExtras,
+        derrotas: linha.derrotas + derrotasExtras,
+        golsPro: linha.golsPro + golsMandanteNum,
+        golsSofridos: linha.golsSofridos + golsVisitanteNum
+      };
+    }
+
+    // 2. CASO DO VISITANTE
+    if (linha.idTime === partidaEncontrada.idVisitante) {
+      let pontosExtras = 0;
+      let vitoriasExtras = 0;
+      let empatesExtras = 0;
+      let derrotasExtras = 0;
+
+      if (golsVisitanteNum > golsMandanteNum) {
+        pontosExtras = 3;
+        vitoriasExtras = 1;
+      } else if (golsMandanteNum === golsVisitanteNum) {
+        pontosExtras = 1;
+        empatesExtras = 1;
+      } else {
+        derrotasExtras = 1;
+      }
+
+      return {
+        ...linha,
+        jogos: linha.jogos + 1,
+        pontos: linha.pontos + pontosExtras,
+        vitorias: linha.vitorias + vitoriasExtras,
+        empates: linha.empates + empatesExtras,
+        derrotas: linha.derrotas + derrotasExtras,
+        golsPro: linha.golsPro + golsVisitanteNum,
+        golsSofridos: linha.golsSofridos + golsMandanteNum
+      };
+    }
+
+    // 3. NÃO JOGOU NESSA PARTIDA
+    return linha;
+  });
+});
+
 }
 
 function cadastrarTime(nomeRecebido) {
@@ -133,6 +229,28 @@ function cadastrarTime(nomeRecebido) {
     return [...timesAnteriores, novoClube];
   });
 }
+
+function removerTime(idParaRemover) {
+  setTimes((timesAnteriores) => {
+    return timesAnteriores.filter((time) => time.id !== idParaRemover);
+  });
+}
+
+
+const classificacaoOrdenada = [...classificacao].sort((timeA, timeB) => {
+  if (timeB.pontos === timeA.pontos) {
+    const saldoA = timeA.golsPro - timeA.golsSofridos;
+    const saldoB = timeB.golsPro - timeB.golsSofridos;
+
+    if(saldoA === saldoB)
+      {
+        return timeB.golsPro - timeA.golsPro;
+      }
+
+      return saldoB - saldoA;
+  }
+  return timeB.pontos - timeA.pontos;
+});
 
 
   return (
@@ -178,6 +296,8 @@ function cadastrarTime(nomeRecebido) {
               </span>
             </div>
 
+
+            { abaAtiva === "partidas" && (
             <button
               type="button"
               disabled={!podeGerarRodadas}
@@ -190,6 +310,7 @@ function cadastrarTime(nomeRecebido) {
             >
               Gerar Tabela de Jogos
             </button>
+            )}
           </div>
 
         </div>
@@ -238,7 +359,7 @@ function cadastrarTime(nomeRecebido) {
           <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
             <h2 className="font-bold text-lg text-slate-800">Tabela de Classificação</h2>
             <p className="text-sm text-slate-500 mt-1">Aqui construiremos a tabela de pontos corridos.</p>
-            <TabelaClassificacao dados={classificacao} />
+            <TabelaClassificacao dados={classificacaoOrdenada} />
           </div>
         )}
 
@@ -254,8 +375,19 @@ function cadastrarTime(nomeRecebido) {
           times = {times}
           onAdicionarTime = {cadastrarTime}
           ligaCheia={podeGerarRodadas}
+          onRemoverTime={removerTime}
+          setTimeSelecionado = {setTimeSelecionado}
           />
         )}
+
+    {timeSelecionado && (
+    <ModalElenco
+    time={timeSelecionado}
+    jogadores={jogadores}
+    onAdicionarJogador={handleAdicionarJogador}
+    onFechar={() => setTimeSelecionado(null)}
+    />
+    )}
 
       </main>
     </div>
