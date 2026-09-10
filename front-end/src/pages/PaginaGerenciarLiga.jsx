@@ -4,7 +4,7 @@ import { useState } from "react";
 import { TabelaClassificacao } from "../components/TabelaClassificacao";
 import { ListaPartida } from "../components/ListaPartida";
 import { AbaTimes } from "../components/AbaTimes";
-import { ModalElenco } from "../components/ModalElenco";
+import { ModalElenco }  from "../components/ModalElenco";
 
 export default function PaginaGerenciarLiga() {
   // useParams extrai o :id que definimos na rota "/liga/:id"
@@ -127,7 +127,7 @@ export default function PaginaGerenciarLiga() {
   
   }
 
- function atualizarResultadoPartida(idPartida, golsMandante, golsVisitante) {
+ function atualizarResultadoPartida(idPartida, golsMandante, golsVisitante, autoresGols = [] ) {
   const partidaEncontrada = partidas.find((p) => p.id === idPartida);
   const golsMandanteNum = Number(golsMandante);
   const golsVisitanteNum = Number(golsVisitante);
@@ -138,6 +138,7 @@ export default function PaginaGerenciarLiga() {
      ...partida,
      golsMandante: golsMandanteNum,
      golsVisitante: golsVisitanteNum,
+     autoresGols: autoresGols,
      finalizada: true
      };
     }
@@ -214,20 +215,41 @@ export default function PaginaGerenciarLiga() {
 
 }
 
-function cadastrarTime(nomeRecebido) {
-
-  if(times.length >= totalTimeEsperados){
-    return alert("Limite de times atingido!")
+function cadastrarTime(dadosTime) {
+  if (times.length >= totalTimeEsperados) {
+    return alert("Limite de times atingido!");
   }
 
+  const idGerado = Date.now();
+
+  // 1. Cria o objeto do clube com os novos dados
   const novoClube = {
-    id: Date.now(),
-    nome: nomeRecebido
+    id: idGerado,
+    nome: dadosTime.nome,
+    sigla: dadosTime.sigla,
+    cor: dadosTime.cor,
   };
 
-  setTimes((timesAnteriores) => {
-    return [...timesAnteriores, novoClube];
-  });
+  // 2. Adiciona à lista de times
+  setTimes((timesAnteriores) => [...timesAnteriores, novoClube]);
+
+  // 3. Adiciona o time zerado na tabela de classificação
+  const novaLinhaClassificacao = {
+    idTime: idGerado,
+    nomeTime: dadosTime.nome,
+    jogos: 0,
+    pontos: 0,
+    vitorias: 0,
+    empates: 0,
+    derrotas: 0,
+    golsPro: 0,
+    golsSofridos: 0,
+  };
+
+  setClassificacao((classificacaoAnterior) => [
+    ...classificacaoAnterior,
+    novaLinhaClassificacao,
+  ]);
 }
 
 function removerTime(idParaRemover) {
@@ -367,6 +389,7 @@ const classificacaoOrdenada = [...classificacao].sort((timeA, timeB) => {
           <ListaPartida 
           partidas={partidas} 
           onSalvarResultado={atualizarResultadoPartida} 
+          jogadores={jogadores}
           />
             )}
 
