@@ -102,6 +102,14 @@ export default function PaginaGerenciarLiga() {
   setJogadores((jogadoresAntigos) => [...jogadoresAntigos, novoJogador]);
    }
 
+
+   function handleRemoverJogador(idJogadorParaRemover) {
+  setJogadores((jogadoresAnteriores) =>
+    jogadoresAnteriores.filter((jogador) => jogador.id !== idJogadorParaRemover)
+  );
+}
+
+
   // Algoritmo Round-Robin (todos contra todos em turno único sem repetição)
   function gerarPartidas() {
     // Guarda de segurança: impede execução caso a meta de times não esteja completa
@@ -440,6 +448,7 @@ const classificacaoOrdenada = [...classificacao].sort((timeA, timeB) => {
     jogadores={jogadores}
     onAdicionarJogador={handleAdicionarJogador}
     onFechar={() => setTimeSelecionado(null)}
+    onRemoverJogador={handleRemoverJogador}
     />
     )}
 
