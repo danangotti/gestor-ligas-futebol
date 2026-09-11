@@ -6,6 +6,7 @@ export function ModalElenco({
   onAdicionarJogador,
   onRemoverJogador,
   onFechar,
+  statusCompeticao
 }) {
   // Controle do formulário de novo atleta
   const [nomeJogador, setNomeJogador] = useState("");
@@ -53,7 +54,6 @@ export function ModalElenco({
   return (
     <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden border border-slate-200 flex flex-col max-h-[90vh]">
-        
         {/* Topo: Identidade do Clube e Fechamento */}
         <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/80">
           <div className="flex items-center gap-3.5">
@@ -70,10 +70,13 @@ export function ModalElenco({
                   {time.nome}
                 </h3>
                 <span className="text-xs bg-slate-200/80 text-slate-700 px-2.5 py-0.5 rounded-full font-bold">
-                  {jogadoresDoTime.length} {jogadoresDoTime.length === 1 ? "atleta" : "atletas"}
+                  {jogadoresDoTime.length}{" "}
+                  {jogadoresDoTime.length === 1 ? "atleta" : "atletas"}
                 </span>
               </div>
-              <p className="text-xs text-slate-400 mt-0.5">Gestão de elenco e numeração da liga</p>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Gestão de elenco e numeração da liga
+              </p>
             </div>
           </div>
 
@@ -88,7 +91,10 @@ export function ModalElenco({
         </div>
 
         {/* Formulário: Adicionar Novo Atleta */}
-        <form onSubmit={handleSubmit} className="p-4 border-b border-slate-100 bg-white">
+        <form
+          onSubmit={handleSubmit}
+          className="p-4 border-b border-slate-100 bg-white"
+        >
           <div className="flex items-center gap-2">
             <input
               type="number"
@@ -121,7 +127,12 @@ export function ModalElenco({
 
             <button
               type="submit"
-              className="bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded-lg text-sm transition-colors cursor-pointer shrink-0"
+              disable={statusCompeticao === "Finalizada"}
+              className={`font-semibold text-sm px-4 py-2 rounded-lg transition-colors ${
+                statusCompeticao === "Finalizada"
+                  ? "bg-slate-200 text-slate-400 cursor-not-allowed" // Estilo desabilitado
+                  : "bg-green-600 hover:bg-green-700 text-white cursor-pointer" // Estilo ativo
+              }`}
             >
               Adicionar
             </button>
@@ -135,15 +146,19 @@ export function ModalElenco({
               <div className="w-10 h-10 mx-auto rounded-full bg-slate-100 flex items-center justify-center text-slate-400 text-sm mb-2">
                 👥
               </div>
-              <p className="text-sm font-semibold text-slate-700">Nenhum jogador inscrito</p>
+              <p className="text-sm font-semibold text-slate-700">
+                Nenhum jogador inscrito
+              </p>
               <p className="text-xs text-slate-400 mt-1 max-w-xs mx-auto">
-                Adicione atletas acima para montar o elenco deste clube na competição.
+                Adicione atletas acima para montar o elenco deste clube na
+                competição.
               </p>
             </div>
           ) : (
             <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
               {jogadoresDoTime.map((atleta) => {
-                const configPos = estiloPosicao[atleta.posicao] || estiloPosicao.MEI;
+                const configPos =
+                  estiloPosicao[atleta.posicao] || estiloPosicao.MEI;
 
                 return (
                   <li
@@ -173,7 +188,12 @@ export function ModalElenco({
                     <button
                       type="button"
                       onClick={() => onRemoverJogador(atleta.id)}
-                      className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors shrink-0 cursor-pointer text-xs"
+                      disabled={statusCompeticao !== "Não iniciada"}
+                      className={`text-sm p-1.5 rounded-lg transition-colors ${
+                        statusCompeticao !== "Não iniciada"
+                          ? "text-slate-300 cursor-not-allowed" // Estilo desabilitado (cinza claro)
+                          : "text-rose-500 hover:bg-rose-50 hover:text-rose-700 cursor-pointer" // Estilo ativo (vermelho)
+                      }`}
                       title="Remover atleta do elenco"
                     >
                       ✕
@@ -195,7 +215,6 @@ export function ModalElenco({
             Fechar
           </button>
         </div>
-
       </div>
     </div>
   );

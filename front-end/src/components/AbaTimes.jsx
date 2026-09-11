@@ -7,6 +7,7 @@ export function AbaTimes({
   ligaCheia,
   onRemoverTime,
   setTimeSelecionado,
+  statusCompeticao
 }) {
   const [novoTimeNome, setNovoTimeNome] = useState("");
   const [novaSigla, setNovaSigla] = useState("");
@@ -82,7 +83,7 @@ export function AbaTimes({
 
           <button
             type="submit"
-            disabled={ligaCheia}
+            disabled={ligaCheia || statusCompeticao !== "Não iniciada"}
             className={`text-sm font-semibold px-4 py-2 rounded-lg transition-colors whitespace-nowrap ${
               ligaCheia
                 ? "bg-slate-200 text-slate-400 cursor-not-allowed"
@@ -141,12 +142,17 @@ export function AbaTimes({
                 </button>
 
                 <button
-                  type="button"
-                  onClick={() => onRemoverTime(time.id)}
-                  className="text-xs text-red-500 hover:text-red-700 hover:bg-red-50 px-2 py-1 rounded transition-colors cursor-pointer"
-                >
-                  Remover
-                </button>
+                type="button"
+                onClick={() => onRemoverTime(time.id)}
+                disabled={statusCompeticao !== "Não iniciada"}
+                className={`text-sm font-semibold px-4 py-2 rounded-lg transition-colors whitespace-nowrap ${
+                  statusCompeticao !== "Não iniciada"
+                  ? "bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200"
+                  : "text-rose-600 hover:bg-rose-50 border border-rose-200 cursor-pointer"
+                   }`}
+                   >
+                    Remover
+                    </button>
               </div>
             </div>
           );

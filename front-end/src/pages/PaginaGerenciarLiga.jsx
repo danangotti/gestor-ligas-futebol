@@ -6,12 +6,34 @@ import { ListaPartida } from "../components/ListaPartida";
 import { AbaTimes } from "../components/AbaTimes";
 import { ModalElenco } from "../components/ModalElenco";
 import { TabelaArtilharia } from "../components/TabelaArtilharia";
+import { ligasIniciais } from "../dados/dadosIniciais";
 
 export default function PaginaGerenciarLiga() {
   const { id } = useParams();
 
-  // Meta de participantes definida para a competição
-  const totalTimeEsperados = 3;
+  // 1. Busca a liga selecionada na base central
+  const ligaAtual = ligasIniciais.find((l) => l.id === Number(id));
+
+  // 2. Guarda de segurança para rotas inexistentes
+  if (!ligaAtual) {
+    return (
+      <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col items-center justify-center p-8 text-center">
+        <h2 className="text-xl font-bold text-slate-800">Liga não encontrada</h2>
+        <p className="text-slate-500 text-sm mt-1 mb-4">
+          A competição solicitada não existe ou foi removida.
+        </p>
+        <Link
+          to="/dashbord"
+          className="text-sm font-semibold text-green-600 hover:text-green-700 underline"
+        >
+          Voltar para o Dashboard
+        </Link>
+      </div>
+    );
+  }
+
+  // 3. Limite de clubes dinâmico conforme o cadastro da liga
+  const totalTimeEsperados = ligaAtual.quantidadeTimes;
 
   // Estados principais da liga
   const [partidas, setPartidas] = useState([]);
@@ -90,87 +112,76 @@ export default function PaginaGerenciarLiga() {
     setPartidas(novasPartidas);
   }
 
+  // Função pura: recebe clubes e partidas atuais e reconstrói a tabela do zero
+  function calcularClassificacao(listaTimes, listaPartidas) {
+    const tabelaBase = listaTimes.map((time) => ({
+      idTime: time.id,
+      nomeTime: time.nome,
+      jogos: 0,
+      pontos: 0,
+      vitorias: 0,
+      empates: 0,
+      derrotas: 0,
+      golsPro: 0,
+      golsSofridos: 0,
+    }));
+
+    listaPartidas.forEach((partida) => {
+      if (!partida.finalizada) return;
+
+      const mandante = tabelaBase.find((t) => t.idTime === partida.idMandante);
+      const visitante = tabelaBase.find((t) => t.idTime === partida.idVisitante);
+
+      if (!mandante || !visitante) return;
+
+      mandante.jogos += 1;
+      visitante.jogos += 1;
+
+      mandante.golsPro += partida.golsMandante;
+      mandante.golsSofridos += partida.golsVisitante;
+      visitante.golsPro += partida.golsVisitante;
+      visitante.golsSofridos += partida.golsMandante;
+
+      if (partida.golsMandante > partida.golsVisitante) {
+        mandante.pontos += 3;
+        mandante.vitorias += 1;
+        visitante.derrotas += 1;
+      } else if (partida.golsMandante < partida.golsVisitante) {
+        visitante.pontos += 3;
+        visitante.vitorias += 1;
+        mandante.derrotas += 1;
+      } else {
+        mandante.pontos += 1;
+        mandante.empates += 1;
+        visitante.pontos += 1;
+        visitante.empates += 1;
+      }
+    });
+
+    return tabelaBase;
+  }
+
   function atualizarResultadoPartida(idPartida, golsMandante, golsVisitante, autoresGols = []) {
-    const partidaEncontrada = partidas.find((p) => p.id === idPartida);
     const golsMandanteNum = Number(golsMandante);
     const golsVisitanteNum = Number(golsVisitante);
 
-    setPartidas((partidasAnteriores) =>
-      partidasAnteriores.map((partida) => {
-        if (partida.id === idPartida) {
-          return {
-            ...partida,
-            golsMandante: golsMandanteNum,
-            golsVisitante: golsVisitanteNum,
-            autoresGols: autoresGols,
-            finalizada: true,
-          };
-        }
-        return partida;
-      })
-    );
+    const partidasAtualizadas = partidas.map((partida) => {
+      if (partida.id === idPartida) {
+        return {
+          ...partida,
+          golsMandante: golsMandanteNum,
+          golsVisitante: golsVisitanteNum,
+          autoresGols: autoresGols,
+          finalizada: true,
+        };
+      }
+      return partida;
+    });
 
-    setClassificacao((classificacaoAnterior) =>
-      classificacaoAnterior.map((linha) => {
-        if (linha.idTime === partidaEncontrada.idMandante) {
-          let pontosExtras = 0;
-          let vitoriasExtras = 0;
-          let empatesExtras = 0;
-          let derrotasExtras = 0;
+    setPartidas(partidasAtualizadas);
 
-          if (golsMandanteNum > golsVisitanteNum) {
-            pontosExtras = 3;
-            vitoriasExtras = 1;
-          } else if (golsMandanteNum === golsVisitanteNum) {
-            pontosExtras = 1;
-            empatesExtras = 1;
-          } else {
-            derrotasExtras = 1;
-          }
-
-          return {
-            ...linha,
-            jogos: linha.jogos + 1,
-            pontos: linha.pontos + pontosExtras,
-            vitorias: linha.vitorias + vitoriasExtras,
-            empates: linha.empates + empatesExtras,
-            derrotas: linha.derrotas + derrotasExtras,
-            golsPro: linha.golsPro + golsMandanteNum,
-            golsSofridos: linha.golsSofridos + golsVisitanteNum,
-          };
-        }
-
-        if (linha.idTime === partidaEncontrada.idVisitante) {
-          let pontosExtras = 0;
-          let vitoriasExtras = 0;
-          let empatesExtras = 0;
-          let derrotasExtras = 0;
-
-          if (golsVisitanteNum > golsMandanteNum) {
-            pontosExtras = 3;
-            vitoriasExtras = 1;
-          } else if (golsMandanteNum === golsVisitanteNum) {
-            pontosExtras = 1;
-            empatesExtras = 1;
-          } else {
-            derrotasExtras = 1;
-          }
-
-          return {
-            ...linha,
-            jogos: linha.jogos + 1,
-            pontos: linha.pontos + pontosExtras,
-            vitorias: linha.vitorias + vitoriasExtras,
-            empates: linha.empates + empatesExtras,
-            derrotas: linha.derrotas + derrotasExtras,
-            golsPro: linha.golsPro + golsVisitanteNum,
-            golsSofridos: linha.golsSofridos + golsMandanteNum,
-          };
-        }
-
-        return linha;
-      })
-    );
+    const novaClassificacao = calcularClassificacao(times, partidasAtualizadas);
+    setClassificacao(novaClassificacao);
   }
 
   function cadastrarTime(dadosTime) {
@@ -187,50 +198,31 @@ export default function PaginaGerenciarLiga() {
       cor: dadosTime.cor,
     };
 
-    setTimes((timesAnteriores) => [...timesAnteriores, novoClube]);
+    const novosTimes = [...times, novoClube];
+    setTimes(novosTimes);
 
-    const novaLinhaClassificacao = {
-      idTime: idGerado,
-      nomeTime: dadosTime.nome,
-      jogos: 0,
-      pontos: 0,
-      vitorias: 0,
-      empates: 0,
-      derrotas: 0,
-      golsPro: 0,
-      golsSofridos: 0,
-    };
-
-    setClassificacao((classificacaoAnterior) => [
-      ...classificacaoAnterior,
-      novaLinhaClassificacao,
-    ]);
+    // Mantém a tabela recalculada sincronizada
+    const novaClassificacao = calcularClassificacao(novosTimes, partidas);
+    setClassificacao(novaClassificacao);
   }
 
   function removerTime(idParaRemover) {
-  // 1. Remove o clube da lista de times
-  setTimes((timesAnteriores) =>
-    timesAnteriores.filter((time) => time.id !== idParaRemover)
-  );
+    const timesFiltrados = times.filter((time) => time.id !== idParaRemover);
+    setTimes(timesFiltrados);
 
-  // 2. Remove o time da tabela de classificação
-  setClassificacao((classificacaoAnterior) =>
-    classificacaoAnterior.filter((linha) => linha.idTime !== idParaRemover)
-  );
+    setJogadores((jogadoresAnteriores) =>
+      jogadoresAnteriores.filter((atleta) => atleta.idTime !== idParaRemover)
+    );
 
-  // 3. Remove os atletas vinculados a esse clube (evita atletas órfãos)
-  setJogadores((jogadoresAnteriores) =>
-    jogadoresAnteriores.filter((atleta) => atleta.idTime !== idParaRemover)
-  );
-
-  // 4. Limpa as partidas geradas para evitar confrontos inválidos
-  setPartidas((partidasAnteriores) =>
-    partidasAnteriores.filter(
+    const partidasFiltradas = partidas.filter(
       (partida) =>
         partida.idMandante !== idParaRemover && partida.idVisitante !== idParaRemover
-    )
-  );
-}
+    );
+    setPartidas(partidasFiltradas);
+
+    const novaClassificacao = calcularClassificacao(timesFiltrados, partidasFiltradas);
+    setClassificacao(novaClassificacao);
+  }
 
   // Ordenação da tabela por critérios de desempate
   const classificacaoOrdenada = [...classificacao].sort((timeA, timeB) => {
@@ -247,6 +239,13 @@ export default function PaginaGerenciarLiga() {
   });
 
   // Métricas derivadas para os cards de resumo
+  let statusCompeticao = "Em andamento";
+
+  if (partidas.length === 0) {
+  statusCompeticao = "Não iniciada";
+  } else if (partidas.every((p) => p.finalizada)) {
+  statusCompeticao = "Finalizada";
+  } 
   const liderAtual = classificacaoOrdenada.length > 0 ? classificacaoOrdenada[0] : null;
   const partidasFinalizadas = partidas.filter((p) => p.finalizada).length;
   const totalGolsLiga = partidas.reduce((acumulador, p) => {
@@ -261,36 +260,46 @@ export default function PaginaGerenciarLiga() {
       <HeaderDashbord />
 
       <main className="max-w-6xl mx-auto p-6 sm:p-8">
-        
         {/* Link de Retorno */}
-        <Link 
-          to="/dashbord" 
+        <Link
+          to="/dashbord"
           className="text-sm font-medium text-slate-500 hover:text-green-600 transition-colors inline-block mb-4"
         >
           ← Voltar para Minhas Ligas
         </Link>
 
-        {/* 1. Banner Superior com Título e Ação de Gerar Rodadas */}
+        {/* 1. Banner Superior com Título Dinâmico da Liga */}
         <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
           <div>
-            <span className="text-xs font-semibold text-green-700 bg-green-50 border border-green-200 px-2.5 py-1 rounded-md">
-              ID da Liga: {id}
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-semibold text-green-700 bg-green-50 border border-green-200 px-2.5 py-1 rounded-md">
+                ID #{ligaAtual.id}
+              </span>
+              <span className="text-xs font-medium text-slate-500 bg-slate-100 border border-slate-200 px-2.5 py-1 rounded-md">
+                {ligaAtual.formato}
+              </span>
+              <span className="text-xs font-medium text-slate-500 bg-slate-100 border border-slate-200 px-2.5 py-1 rounded-md">
+                {statusCompeticao}
+              </span>
+            </div>
             <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 mt-2">
-              Painel de Gestão da Competição
+              {ligaAtual.nome}
             </h1>
             <p className="text-slate-500 text-sm mt-1">
-              Gerencie a tabela de classificação, os times participantes e as rodadas.
+              Gerencie a tabela de classificação, os times participantes e as
+              rodadas.
             </p>
           </div>
 
           <div className="flex flex-col sm:items-end gap-2.5 bg-slate-50 sm:bg-transparent p-4 sm:p-0 rounded-xl border sm:border-0 border-slate-200">
             <div className="flex items-center gap-2">
-              <span className="text-xs text-slate-500 font-medium">Clubes inscritos:</span>
+              <span className="text-xs text-slate-500 font-medium">
+                Clubes inscritos:
+              </span>
               <span
                 className={`text-xs font-bold px-2 py-0.5 rounded-full ${
-                  podeGerarRodadas 
-                    ? "bg-green-100 text-green-700" 
+                  podeGerarRodadas
+                    ? "bg-green-100 text-green-700"
                     : "bg-amber-100 text-amber-700"
                 }`}
               >
@@ -301,21 +310,23 @@ export default function PaginaGerenciarLiga() {
             {abaAtiva === "partidas" && (
               <button
                 type="button"
-                disabled={!podeGerarRodadas}
+                disabled={
+                  !podeGerarRodadas || statusCompeticao !== "Não iniciada"
+                }
                 onClick={gerarPartidas}
                 className={`px-4 py-2.5 rounded-lg font-semibold text-sm transition-all duration-200 shadow-sm ${
-                  podeGerarRodadas
+                  podeGerarRodadas && statusCompeticao === "Não iniciada"
                     ? "bg-green-600 hover:bg-green-700 text-white cursor-pointer active:scale-95"
                     : "bg-slate-200 text-slate-400 cursor-not-allowed shadow-none"
                 }`}
               >
-                Gerar Tabela de Jogos
+                Gerar Tabela de Jogo
               </button>
             )}
           </div>
         </div>
 
-        {/* 2. Cards de Resumo da Competição (Grade Separada) */}
+        {/* 2. Cards de Resumo da Competição */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5 mb-6">
           <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-2xs">
             <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">
@@ -331,7 +342,10 @@ export default function PaginaGerenciarLiga() {
               Jogos Disputados
             </span>
             <p className="text-xl font-bold text-slate-800 mt-1">
-              {partidasFinalizadas} <span className="text-xs font-normal text-slate-400">/ {partidas.length}</span>
+              {partidasFinalizadas}{" "}
+              <span className="text-xs font-normal text-slate-400">
+                / {partidas.length}
+              </span>
             </p>
           </div>
 
@@ -349,17 +363,19 @@ export default function PaginaGerenciarLiga() {
               Líder Atual
             </span>
             <p className="text-sm font-bold text-slate-800 mt-1 truncate">
-              {liderAtual && liderAtual.jogos > 0 ? liderAtual.nomeTime : "Aguardando início"}
+              {liderAtual && liderAtual.jogos > 0
+                ? liderAtual.nomeTime
+                : "Aguardando início"}
             </p>
           </div>
         </div>
 
-        {/* 3. Barra de Navegação por Abas */}
-        <div className="flex border-b border-slate-200 mb-6 gap-8">
+        {/* 3. Barra de Navegação por Abas (com rolagem responsiva para não cortar abas) */}
+        <div className="flex border-b border-slate-200 mb-6 gap-4 sm:gap-8 overflow-x-auto">
           <button
             type="button"
             onClick={() => setAbaAtiva("classificacao")}
-            className={`pb-3 text-sm transition-colors relative ${
+            className={`pb-3 text-sm transition-colors whitespace-nowrap relative ${
               abaAtiva === "classificacao"
                 ? "text-green-600 border-b-2 border-green-600 font-semibold"
                 : "text-slate-500 hover:text-slate-700 font-medium cursor-pointer"
@@ -371,7 +387,7 @@ export default function PaginaGerenciarLiga() {
           <button
             type="button"
             onClick={() => setAbaAtiva("partidas")}
-            className={`pb-3 text-sm transition-colors relative ${
+            className={`pb-3 text-sm transition-colors whitespace-nowrap relative ${
               abaAtiva === "partidas"
                 ? "text-green-600 border-b-2 border-green-600 font-semibold"
                 : "text-slate-500 hover:text-slate-700 font-medium cursor-pointer"
@@ -383,7 +399,7 @@ export default function PaginaGerenciarLiga() {
           <button
             type="button"
             onClick={() => setAbaAtiva("times")}
-            className={`pb-3 text-sm transition-colors relative ${
+            className={`pb-3 text-sm transition-colors whitespace-nowrap relative ${
               abaAtiva === "times"
                 ? "text-green-600 border-b-2 border-green-600 font-semibold"
                 : "text-slate-500 hover:text-slate-700 font-medium cursor-pointer"
@@ -395,7 +411,7 @@ export default function PaginaGerenciarLiga() {
           <button
             type="button"
             onClick={() => setAbaAtiva("artilharia")}
-            className={`pb-3 text-sm transition-colors relative ${
+            className={`pb-3 text-sm transition-colors whitespace-nowrap relative ${
               abaAtiva === "artilharia"
                 ? "text-green-600 border-b-2 border-green-600 font-semibold"
                 : "text-slate-500 hover:text-slate-700 font-medium cursor-pointer"
@@ -408,8 +424,12 @@ export default function PaginaGerenciarLiga() {
         {/* 4. Área de Conteúdo das Abas */}
         {abaAtiva === "classificacao" && (
           <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-            <h2 className="font-bold text-lg text-slate-800">Tabela de Classificação</h2>
-            <p className="text-sm text-slate-500 mt-1">Pontos corridos com atualização em tempo real.</p>
+            <h2 className="font-bold text-lg text-slate-800">
+              Tabela de Classificação
+            </h2>
+            <p className="text-sm text-slate-500 mt-1">
+              Pontos corridos com atualização em tempo real.
+            </p>
             <div className="mt-4">
               <TabelaClassificacao dados={classificacaoOrdenada} />
             </div>
@@ -417,9 +437,9 @@ export default function PaginaGerenciarLiga() {
         )}
 
         {abaAtiva === "partidas" && (
-          <ListaPartida 
-            partidas={partidas} 
-            onSalvarResultado={atualizarResultadoPartida} 
+          <ListaPartida
+            partidas={partidas}
+            onSalvarResultado={atualizarResultadoPartida}
             jogadores={jogadores}
           />
         )}
@@ -432,6 +452,7 @@ export default function PaginaGerenciarLiga() {
             ligaCheia={podeGerarRodadas}
             onRemoverTime={removerTime}
             setTimeSelecionado={setTimeSelecionado}
+            statusCompeticao={statusCompeticao}
           />
         )}
 
@@ -451,9 +472,9 @@ export default function PaginaGerenciarLiga() {
             onAdicionarJogador={handleAdicionarJogador}
             onFechar={() => setTimeSelecionado(null)}
             onRemoverJogador={handleRemoverJogador}
+            statusCompeticao={statusCompeticao}
           />
         )}
-
       </main>
     </div>
   );
