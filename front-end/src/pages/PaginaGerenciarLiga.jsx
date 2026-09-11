@@ -208,10 +208,29 @@ export default function PaginaGerenciarLiga() {
   }
 
   function removerTime(idParaRemover) {
-    setTimes((timesAnteriores) =>
-      timesAnteriores.filter((time) => time.id !== idParaRemover)
-    );
-  }
+  // 1. Remove o clube da lista de times
+  setTimes((timesAnteriores) =>
+    timesAnteriores.filter((time) => time.id !== idParaRemover)
+  );
+
+  // 2. Remove o time da tabela de classificação
+  setClassificacao((classificacaoAnterior) =>
+    classificacaoAnterior.filter((linha) => linha.idTime !== idParaRemover)
+  );
+
+  // 3. Remove os atletas vinculados a esse clube (evita atletas órfãos)
+  setJogadores((jogadoresAnteriores) =>
+    jogadoresAnteriores.filter((atleta) => atleta.idTime !== idParaRemover)
+  );
+
+  // 4. Limpa as partidas geradas para evitar confrontos inválidos
+  setPartidas((partidasAnteriores) =>
+    partidasAnteriores.filter(
+      (partida) =>
+        partida.idMandante !== idParaRemover && partida.idVisitante !== idParaRemover
+    )
+  );
+}
 
   // Ordenação da tabela por critérios de desempate
   const classificacaoOrdenada = [...classificacao].sort((timeA, timeB) => {
