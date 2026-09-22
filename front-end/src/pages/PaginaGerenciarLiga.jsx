@@ -11,14 +11,19 @@ import { ligasIniciais } from "../dados/dadosIniciais";
 export default function PaginaGerenciarLiga() {
   const { id } = useParams();
 
-  // 1. Busca a liga selecionada na base central
-  const ligaAtual = ligasIniciais.find((l) => l.id === Number(id));
+  // 1. Busca primeiro nas ligas salvas no navegador; se não houver, usa a lista inicial
+  const ligasSalvas = localStorage.getItem("ligas_cadastradas");
+  const todasAsLigas = ligasSalvas ? JSON.parse(ligasSalvas) : ligasIniciais;
+
+  const ligaAtual = todasAsLigas.find((l) => l.id === Number(id));
 
   // 2. Guarda de segurança para rotas inexistentes
   if (!ligaAtual) {
     return (
       <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col items-center justify-center p-8 text-center">
-        <h2 className="text-xl font-bold text-slate-800">Liga não encontrada</h2>
+        <h2 className="text-xl font-bold text-slate-800">
+          Liga não encontrada
+        </h2>
         <p className="text-slate-500 text-sm mt-1 mb-4">
           A competição solicitada não existe ou foi removida.
         </p>
@@ -36,41 +41,45 @@ export default function PaginaGerenciarLiga() {
   const totalTimeEsperados = ligaAtual.quantidadeTimes;
 
   // Estados principais da liga
-  const [partidas, setPartidas] = useState([]);
+  const [partidas, setPartidas] = useState(ligaAtual.partidas || []);
   const [abaAtiva, setAbaAtiva] = useState("classificacao");
   const [timeSelecionado, setTimeSelecionado] = useState(null);
 
-  // Lista inicial de clubes cadastrados
-  const [times, setTimes] = useState([
-    { id: 1, nome: "Time A", cidade: "BH" },
-    { id: 2, nome: "Time B", cidade: "RJ" },
-    { id: 3, nome: "Time C", cidade: "RJ" },
-  ]);
+  // Lista inicial de clubes 
+  const [times, setTimes] = useState(ligaAtual.times || []);
 
   // Tabela inicial de classificação
-  const [classificacao, setClassificacao] = useState([
-    { idTime: 1, nomeTime: "Time A", jogos: 0, pontos: 0, vitorias: 0, empates: 0, derrotas: 0, golsPro: 0, golsSofridos: 0 },
-    { idTime: 2, nomeTime: "Time B", jogos: 0, pontos: 0, vitorias: 0, empates: 0, derrotas: 0, golsPro: 0, golsSofridos: 0 },
-    { idTime: 3, nomeTime: "Time C", jogos: 0, pontos: 0, vitorias: 0, empates: 0, derrotas: 0, golsPro: 0, golsSofridos: 0 },
-  ]);
+  const [classificacao, setClassificacao] = useState(() =>
+    calcularClassificacao(ligaAtual.times || [], ligaAtual.partidas || []),
+  );
 
   // Atletas cadastrados
-  const [jogadores, setJogadores] = useState([
-    // Time A (id: 1)
-    { id: 101, idTime: 1, nome: "Carlos Eduardo", numero: "9", posicao: "ATA" },
-    { id: 102, idTime: 1, nome: "Danilo Silva", numero: "10", posicao: "MEI" },
-    { id: 103, idTime: 1, nome: "Lucas Moura", numero: "4", posicao: "DEF" },
+  const [jogadores, setJogadores] = useState(ligaAtual.jogadores || []);
 
-    // Time B (id: 2)
-    { id: 201, idTime: 2, nome: "Gabriel Barbosa", numero: "9", posicao: "ATA" },
-    { id: 202, idTime: 2, nome: "Everton Ribeiro", numero: "7", posicao: "MEI" },
-    { id: 203, idTime: 2, nome: "David Luiz", numero: "3", posicao: "DEF" },
 
-    // Time C (id: 3)
-    { id: 301, idTime: 3, nome: "Pedro Raul", numero: "9", posicao: "ATA" },
-    { id: 302, idTime: 3, nome: "Rodrigo Garro", numero: "8", posicao: "MEI" },
-    { id: 303, idTime: 3, nome: "Fagner", numero: "23", posicao: "DEF" },
-  ]);
+  function salvarDadosDaLiga(novosTimes, novasPartidas, novosJogadores) {
+    // 1. Busca a lista completa do navegador
+    const ligasSalvas = localStorage.getItem("ligas_cadastradas");
+    const todasAsLigas = ligasSalvas ? JSON.parse(ligasSalvas) : ligasIniciais;
+
+    // 2. Atualiza apenas a liga atual com os novos arrays
+    // map percorre todas as ligas, buscando apenas a q tem o MESMO ID da liga ATUAL
+    const ligasAtualizadas = todasAsLigas.map((liga) => {
+      if (liga.id === ligaAtual.id) {
+        return {
+          ...liga,
+          times: novosTimes,
+          partidas: novasPartidas,
+          jogadores: novosJogadores,
+        };
+      }
+      return liga;
+    });
+
+    // 3. Devolve para o localStorage
+    localStorage.setItem("ligas_cadastradas", JSON.stringify(ligasAtualizadas));
+  }
+
 
   // Variável derivada: avalia se a meta de times foi atingida
   const podeGerarRodadas = times.length === totalTimeEsperados;
@@ -81,7 +90,9 @@ export default function PaginaGerenciarLiga() {
 
   function handleRemoverJogador(idJogadorParaRemover) {
     setJogadores((jogadoresAnteriores) =>
-      jogadoresAnteriores.filter((jogador) => jogador.id !== idJogadorParaRemover)
+      jogadoresAnteriores.filter(
+        (jogador) => jogador.id !== idJogadorParaRemover,
+      ),
     );
   }
 
@@ -130,7 +141,9 @@ export default function PaginaGerenciarLiga() {
       if (!partida.finalizada) return;
 
       const mandante = tabelaBase.find((t) => t.idTime === partida.idMandante);
-      const visitante = tabelaBase.find((t) => t.idTime === partida.idVisitante);
+      const visitante = tabelaBase.find(
+        (t) => t.idTime === partida.idVisitante,
+      );
 
       if (!mandante || !visitante) return;
 
@@ -161,7 +174,12 @@ export default function PaginaGerenciarLiga() {
     return tabelaBase;
   }
 
-  function atualizarResultadoPartida(idPartida, golsMandante, golsVisitante, autoresGols = []) {
+  function atualizarResultadoPartida(
+    idPartida,
+    golsMandante,
+    golsVisitante,
+    autoresGols = [],
+  ) {
     const golsMandanteNum = Number(golsMandante);
     const golsVisitanteNum = Number(golsVisitante);
 
@@ -204,6 +222,8 @@ export default function PaginaGerenciarLiga() {
     // Mantém a tabela recalculada sincronizada
     const novaClassificacao = calcularClassificacao(novosTimes, partidas);
     setClassificacao(novaClassificacao);
+
+    salvarDadosDaLiga(novosTimes, partidas, jogadores);
   }
 
   function removerTime(idParaRemover) {
@@ -211,17 +231,23 @@ export default function PaginaGerenciarLiga() {
     setTimes(timesFiltrados);
 
     setJogadores((jogadoresAnteriores) =>
-      jogadoresAnteriores.filter((atleta) => atleta.idTime !== idParaRemover)
+      jogadoresAnteriores.filter((atleta) => atleta.idTime !== idParaRemover),
     );
 
     const partidasFiltradas = partidas.filter(
       (partida) =>
-        partida.idMandante !== idParaRemover && partida.idVisitante !== idParaRemover
+        partida.idMandante !== idParaRemover &&
+        partida.idVisitante !== idParaRemover,
     );
     setPartidas(partidasFiltradas);
 
-    const novaClassificacao = calcularClassificacao(timesFiltrados, partidasFiltradas);
+    const novaClassificacao = calcularClassificacao(
+      timesFiltrados,
+      partidasFiltradas,
+    );
     setClassificacao(novaClassificacao);
+
+    salvarDadosDaLiga(timesFiltrados, partidasFiltradas, jogadoresFiltrados);
   }
 
   // Ordenação da tabela por critérios de desempate
@@ -242,11 +268,12 @@ export default function PaginaGerenciarLiga() {
   let statusCompeticao = "Em andamento";
 
   if (partidas.length === 0) {
-  statusCompeticao = "Não iniciada";
+    statusCompeticao = "Não iniciada";
   } else if (partidas.every((p) => p.finalizada)) {
-  statusCompeticao = "Finalizada";
-  } 
-  const liderAtual = classificacaoOrdenada.length > 0 ? classificacaoOrdenada[0] : null;
+    statusCompeticao = "Finalizada";
+  }
+  const liderAtual =
+    classificacaoOrdenada.length > 0 ? classificacaoOrdenada[0] : null;
   const partidasFinalizadas = partidas.filter((p) => p.finalizada).length;
   const totalGolsLiga = partidas.reduce((acumulador, p) => {
     if (p.finalizada) {

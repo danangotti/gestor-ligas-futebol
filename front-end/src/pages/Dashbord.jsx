@@ -13,25 +13,35 @@ export default function PaginaDashbord() {
   const [formatoLiga, setFormatoLiga] = useState("Pontos corridos");
   const [modalAberto, setModalAberto] = useState(false);
 
-  const [listaDeLigas, setListaDeLigas] = useState(ligasIniciais);
+  const [listaDeLigas, setListaDeLigas] = useState(() => {
+    // 1. Tenta buscar no navegador se existe a chave "ligas_cadastradas"
+    const salvas = localStorage.getItem("ligas_cadastradas");
 
-  function salvarNovaLiga() {
-    if (nomeLiga.trim() === "") {
-      alert("Por favor, digite o nome da competição.");
-      return;
-    }
+    // 2. Operador ternário (condição ? se_verdadeiro : se_falso)
+    // Se encontrou dados em texto, converte com JSON.parse().
+    // Se não encontrou (primeira vez do usuário), usa a lista inicial padrão.
+    return salvas ? JSON.parse(salvas) : ligasIniciais;
+  });
 
-    // Ao criar, inicializamos com array de partidas vazio
-    // para que o status calculado seja "Não iniciada"
+  function salvarNovaLiga(dadosDaLiga) {
     const novaLiga = {
       id: Date.now(),
-      nome: nomeLiga,
-      quantidadeTimes: Number(qtdTimes),
-      formato: formatoLiga,
+      nome: dadosDaLiga.nome,
+      formato: dadosDaLiga.formato,
+      configuracao: dadosDaLiga.configuracao,
+      quantidadeTimes: dadosDaLiga.configuracao.totalEquipes,
       partidas: [],
     };
 
-    setListaDeLigas([...listaDeLigas, novaLiga]);
+    // 1. Cria a lista com a nova liga no final (imutabilidade do React)
+    const listaAtualizada = [...listaDeLigas, novaLiga];
+
+    // 2. Atualiza o estado da tela
+    setListaDeLigas(listaAtualizada);
+
+    // 3. Converte a lista para texto e grava na chave "ligas_cadastradas"
+    localStorage.setItem("ligas_cadastradas", JSON.stringify(listaAtualizada));
+
     setNomeLiga("");
     setModalAberto(false);
   }

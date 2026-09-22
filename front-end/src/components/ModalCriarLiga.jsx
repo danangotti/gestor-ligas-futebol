@@ -72,6 +72,53 @@ export default function ModalCriarLiga({
 
   if (!modalAberto) return null;
 
+  function aoSalvar() {
+    if (nomeLiga.trim() === "") {
+      alert("Por favor, digite o nome da competição.");
+      return;
+    }
+
+    let detalhes = {};
+
+    if (formatoLiga === "Pontos Corridos") {
+      detalhes = {
+        tipoTurno,
+        totalEquipes: qtdTimes,
+      };
+    } else if (formatoLiga === "Fase de Grupos + Mata-Mata") {
+      detalhes = {
+        qtdGrupos,
+        timesPorGrupo,
+        classificadosPorGrupo,
+        turnoGrupos,
+        totalEquipes: totalTimesGrupos,
+        totalClassificados: totalClassificadosMataMata,
+      };
+    } else if (formatoLiga === "Mata-Mata") {
+      detalhes = {
+        totalEquipes: qtdTimesMataMata,
+        faseInicial,
+        tipoConfronto: tipoConfrontoMataMata,
+      };
+    } else if (formatoLiga === "Pontos Corridos + Mata-Mata") {
+      detalhes = {
+        totalEquipes: qtdTimesPontosMataMata,
+        totalClassificados: qtdClassificadosPontosMataMata,
+        faseInicial: faseInicialMisto,
+        turnoPontos: turnoPontosMataMata,
+      };
+    }
+
+    const novaLiga = {
+      nome: nomeLiga.trim(),
+      formato: formatoLiga,
+      configuracao: detalhes,
+    };
+
+    salvarNovaLiga(novaLiga);
+    fecharModal();
+  }
+
   return (
     <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
       <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-lg p-6 shadow-xl">
@@ -477,7 +524,7 @@ export default function ModalCriarLiga({
               </button>
               <button
                 type="button"
-                onClick={salvarNovaLiga}
+                onClick={aoSalvar}
                 className="px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-xl transition-colors shadow-sm"
               >
                 Salvar Liga
