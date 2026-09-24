@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "HS/Q+Tvcnxo=",
+  "dgSpecHash": "U2/YFUIDX3Q=",
   "success": true,
-  "projectFilePath": "C:\\Users\\dan\\source\\repos\\P1-GestorDeLigas\\GestorLigas.API\\GestorLigas.API.csproj",
+  "projectFilePath": "c:\\Users\\dan\\gestor-ligas-futebol\\back-end\\P1-GestorDeLigas\\GestorLigas.API\\GestorLigas.API.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\dan\\.nuget\\packages\\microsoft.aspnetcore.openapi\\10.0.11\\microsoft.aspnetcore.openapi.10.0.11.nupkg.sha512",
     "C:\\Users\\dan\\.nuget\\packages\\microsoft.entityframeworkcore\\10.0.4\\microsoft.entityframeworkcore.10.0.4.nupkg.sha512",
