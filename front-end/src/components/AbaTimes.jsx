@@ -7,11 +7,20 @@ export function AbaTimes({
   ligaCheia,
   onRemoverTime,
   setTimeSelecionado,
-  statusCompeticao
+  statusCompeticao,
+  isGrupos,
+  configuracao,
 }) {
   const [novoTimeNome, setNovoTimeNome] = useState("");
   const [novaSigla, setNovaSigla] = useState("");
   const [corTime, setCorTime] = useState("#15803d");
+  const [grupoSelecionado, setGrupoSelecionado] = useState("A");
+
+  // Limita as letras exibidas de acordo com a quantidade de grupos da liga
+  const letrasDisponiveis = ["A", "B", "C", "D", "E", "F", "G", "H"].slice(
+    0,
+    configuracao?.qtdGrupos || 2,
+  );
 
   function handleAdicionar(e) {
     e.preventDefault();
@@ -25,10 +34,12 @@ export function AbaTimes({
       ? novaSigla.trim().toUpperCase()
       : novoTimeNome.trim().substring(0, 3).toUpperCase();
 
+    // Envia o time com a propriedade de grupo associada
     onAdicionarTime({
       nome: novoTimeNome.trim(),
       sigla: siglaFinal,
       cor: corTime,
+      grupo: isGrupos ? grupoSelecionado : null,
     });
 
     setNovoTimeNome("");
@@ -41,13 +52,18 @@ export function AbaTimes({
       {/* Cabeçalho e Formulário */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-slate-100 pb-6 mb-6">
         <div>
-          <h2 className="font-bold text-lg text-slate-800">Times Participantes</h2>
+          <h2 className="font-bold text-lg text-slate-800">
+            Times Participantes
+          </h2>
           <p className="text-sm text-slate-500">
             Cadastre e personalize os clubes inscritos na liga.
           </p>
         </div>
 
-        <form onSubmit={handleAdicionar} className="flex flex-wrap items-center gap-2">
+        <form
+          onSubmit={handleAdicionar}
+          className="flex flex-wrap items-center gap-2"
+        >
           <div
             className="flex items-center gap-1.5 border border-slate-300 rounded-lg px-2 py-1.5 bg-slate-50"
             title="Cor do clube"
@@ -81,6 +97,22 @@ export function AbaTimes({
             className="flex-1 min-w-[160px] border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-green-600 disabled:bg-slate-100 disabled:cursor-not-allowed"
           />
 
+          {/* Campo de Seleção de Grupo (visível apenas para Fase de Grupos) */}
+          {isGrupos && (
+            <select
+              value={grupoSelecionado}
+              disabled={ligaCheia}
+              onChange={(e) => setGrupoSelecionado(e.target.value)}
+              className="border border-slate-300 rounded-lg px-3 py-2 text-sm font-semibold text-slate-700 bg-white focus:outline-none focus:border-green-600 disabled:bg-slate-100 disabled:cursor-not-allowed cursor-pointer"
+            >
+              {letrasDisponiveis.map((letra) => (
+                <option key={letra} value={letra}>
+                  Grupo {letra}
+                </option>
+              ))}
+            </select>
+          )}
+
           <button
             type="submit"
             disabled={ligaCheia || statusCompeticao !== "Não iniciada"}
@@ -98,9 +130,12 @@ export function AbaTimes({
       {/* Grid de Cards dos Clubes */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
         {times.map((time) => {
-          const siglaExibicao = time.sigla || time.nome.substring(0, 3).toUpperCase();
+          const siglaExibicao =
+            time.sigla || time.nome.substring(0, 3).toUpperCase();
           const corExibicao = time.cor || "#15803d";
-          const totalAtletas = jogadores.filter((j) => j.idTime === time.id).length;
+          const totalAtletas = jogadores.filter(
+            (j) => j.idTime === time.id,
+          ).length;
 
           return (
             <div
@@ -120,7 +155,15 @@ export function AbaTimes({
                   <p className="font-bold text-slate-800 text-sm truncate">
                     {time.nome}
                   </p>
+
                   <div className="flex items-center gap-1.5 mt-0.5">
+                    {/* Badge indicando o grupo */}
+                    {time.grupo && (
+                      <span className="text-[10px] font-bold text-green-700 bg-green-50 px-2 py-0.5 rounded border border-green-200 inline-block">
+                        Grupo {time.grupo}
+                      </span>
+                    )}
+
                     <span className="text-[10px] font-medium uppercase text-slate-400 bg-white px-2 py-0.5 rounded border border-slate-200 inline-block">
                       Inscrito
                     </span>
@@ -142,17 +185,17 @@ export function AbaTimes({
                 </button>
 
                 <button
-                type="button"
-                onClick={() => onRemoverTime(time.id)}
-                disabled={statusCompeticao !== "Não iniciada"}
-                className={`text-sm font-semibold px-4 py-2 rounded-lg transition-colors whitespace-nowrap ${
-                  statusCompeticao !== "Não iniciada"
-                  ? "bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200"
-                  : "text-rose-600 hover:bg-rose-50 border border-rose-200 cursor-pointer"
-                   }`}
-                   >
-                    Remover
-                    </button>
+                  type="button"
+                  onClick={() => onRemoverTime(time.id)}
+                  disabled={statusCompeticao !== "Não iniciada"}
+                  className={`text-sm font-semibold px-4 py-2 rounded-lg transition-colors whitespace-nowrap ${
+                    statusCompeticao !== "Não iniciada"
+                      ? "bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200"
+                      : "text-rose-600 hover:bg-rose-50 border border-rose-200 cursor-pointer"
+                  }`}
+                >
+                  Remover
+                </button>
               </div>
             </div>
           );
