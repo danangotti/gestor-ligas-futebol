@@ -44,6 +44,7 @@ export default function PaginaGerenciarLiga() {
   const isMataMata = ligaAtual.formato === "Mata-Mata";
   const isGrupos = ligaAtual.formato === "Fase de Grupos + Mata-Mata";
   const totalTimeEsperados = ligaAtual.quantidadeTimes;
+  const [subAbaPartidas, setSubAbaPartidas] = useState("grupos");
 
   // Estados principais da liga
   const [partidas, setPartidas] = useState(ligaAtual.partidas || []);
@@ -356,15 +357,38 @@ export default function PaginaGerenciarLiga() {
       }
       const partidasMataMata = gerarEstruturaMataMata(classificadosMataMata);
 
-      setPartidas(partidasMataMata);
+      // PREVENÇÃO DE ERROS NO REACT:
+      // Se não ajustar os IDs aqui, a Final terá "id: 1", e o Jogo 1 do Grupo A também terá "id: 1".
+      // quando isso acontece, o React confunde as chaves e dá problema ao lançar o placar.
+      // descobrir qual é o maior ID que a fase de grupos usou, e as novas partidas começam a partir dele.
+      const maiorIdAtual = partidas.reduce(
+        (max, p) => (p.id > max ? p.id : max),
+        0,
+      );
+      const partidasMataMataComIdsCertos = partidasMataMata.map((p, index) => ({
+        ...p,
+        id: maiorIdAtual + index + 1,
+        proximoJogoId: p.proximoJogoId ? maiorIdAtual + p.proximoJogoId : null,
+      }));
 
-      salvarDadosDaLiga(times, partidasMataMata, jogadores);
+      const todasAsPartidas = [...partidas, ...partidasMataMataComIdsCertos];
 
+      setPartidas(todasAsPartidas);
+      salvarDadosDaLiga(times, todasAsPartidas, jogadores);
+
+      // Redireciona para a aba do chaveamento
       setAbaAtiva("partidas");
+      setSubAbaPartidas("final");
     }
   }
 
   function calcularClassificacao(listaTimes, listaPartidas) {
+    // FILTRO DE PROTEÇÃO: A classificação só vai olhar para os jogos da fase de grupos!
+    // Assim o histórico fica congelado e protegido para sempre.
+    const partidasGrupos = listaPartidas.filter(
+      (p) => p.fase && p.fase.startsWith("Grupo"),
+    );
+
     const tabelaBase = listaTimes.map((time) => ({
       idTime: time.id,
       nomeTime: time.nome,
@@ -378,7 +402,8 @@ export default function PaginaGerenciarLiga() {
       golsSofridos: 0,
     }));
 
-    listaPartidas.forEach((partida) => {
+    // IMPORTANTE: Iteramos apenas as partidas de grupo, não o mata-mata.
+    partidasGrupos.forEach((partida) => {
       if (!partida.finalizada) return;
 
       const mandante = tabelaBase.find((t) => t.idTime === partida.idMandante);
@@ -450,7 +475,7 @@ export default function PaginaGerenciarLiga() {
     let vencedorId = null;
     let vencedorNome = "";
 
-    if (isMataMata) {
+    if (isMataMata || emFaseMataMata) {
       if (golsMandanteNum > golsVisitanteNum) {
         vencedorId = partidaAtual.idMandante;
         vencedorNome = partidaAtual.nomeMandante;
@@ -490,7 +515,10 @@ export default function PaginaGerenciarLiga() {
         };
       }
 
-      if (isMataMata && partida.id === partidaAtual.proximoJogoId) {
+      if (
+        (isMataMata || emFaseMataMata) &&
+        partida.id === partidaAtual.proximoJogoId
+      ) {
         if (partidaAtual.posicaoProximoJogo === "mandante") {
           return {
             ...partida,
@@ -644,16 +672,21 @@ export default function PaginaGerenciarLiga() {
     !jaEstaNoMataMata;
 
   const emFaseMataMata =
-      isMataMata ||
-      (partidas.length > 0 &&
-        partidas.some((p) => !p.fase.startsWith("Grupo")));
+    isMataMata ||
+    (partidas.length > 0 && partidas.some((p) => !p.fase.startsWith("Grupo")));
+
+  // Separa as partidas de grupos das partidas eliminatórias
+  const partidasDosGrupos = partidas.filter((p) => p.fase.startsWith("Grupo"));
+  const partidasDoMataMata = partidas.filter(
+    (p) => !p.fase.startsWith("Grupo"),
+  );
+  const temMataMataGerado = partidasDoMataMata.length > 0;
 
   return (
     <div className="min-h-screen bg-slate-50/60 text-slate-900 pb-16">
       <HeaderDashbord />
 
       <main className="max-w-6xl mx-auto p-4 sm:p-8">
-        {/* Link de Retorno */}
         <Link
           to="/dashbord"
           className="group inline-flex items-center gap-2 text-xs font-semibold text-slate-500 hover:text-green-600 transition-colors mb-6"
@@ -821,7 +854,7 @@ export default function PaginaGerenciarLiga() {
                 : "text-slate-600 hover:text-slate-900"
             }`}
           >
-            {isMataMata ? "Chaveamento" : "Partidas"}
+            Partidas
           </button>
 
           <button
@@ -864,7 +897,6 @@ export default function PaginaGerenciarLiga() {
         {!isMataMata && abaAtiva === "classificacao" && (
           <div className="space-y-6">
             {isGrupos ? (
-              // CASO 1: Fase de Grupos -> desenha uma tabela para cada grupo
               tabelasPorGrupo.map((grupo) => (
                 <div
                   key={grupo.letra}
@@ -883,13 +915,10 @@ export default function PaginaGerenciarLiga() {
                       Chave {grupo.letra}
                     </span>
                   </div>
-
-                  {/* Entrega apenas os 4 times deste grupo para a tabela */}
                   <TabelaClassificacao dados={grupo.times} />
                 </div>
               ))
             ) : (
-              // CASO 2: Pontos Corridos tradicional -> tabela única
               <div className="bg-white border border-slate-200/80 rounded-3xl p-6 shadow-xs">
                 <div className="mb-4">
                   <h2 className="font-extrabold text-base text-slate-900">
@@ -906,22 +935,58 @@ export default function PaginaGerenciarLiga() {
           </div>
         )}
 
-        {abaAtiva === "partidas" &&
-          (emFaseMataMata ? (
-            <div className="bg-white border border-slate-200/80 rounded-3xl p-6 shadow-xs">
-              <ChaveamentoMataMata
-                partidas={partidas}
+        {abaAtiva === "partidas" && (
+          <div className="space-y-6">
+            {/* Seletor visual de abas internas só entra para o formato misto */}
+            {isGrupos && (
+              <div className="flex items-center gap-2 p-1 bg-slate-200/60 rounded-xl w-fit">
+                <button
+                  type="button"
+                  onClick={() => setSubAbaPartidas("grupos")}
+                  className={`px-5 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    subAbaPartidas === "grupos"
+                      ? "bg-white text-slate-900 shadow-xs"
+                      : "text-slate-500 hover:text-slate-800"
+                  }`}
+                >
+                  Fase de Grupos
+                </button>
+
+                <button
+                  type="button"
+                  disabled={!temMataMataGerado}
+                  onClick={() => setSubAbaPartidas("final")}
+                  className={`px-5 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    !temMataMataGerado
+                      ? "text-slate-300 cursor-not-allowed" // Trava aba se não houver mata mata
+                      : subAbaPartidas === "final"
+                        ? "bg-white text-slate-900 shadow-xs"
+                        : "text-slate-500 hover:text-slate-800"
+                  }`}
+                >
+                  Fase Final
+                </button>
+              </div>
+            )}
+
+            {/* Renderiza a lista de grupos ou o chaveamento conforme a sub-aba escolhida */}
+            {isMataMata || (isGrupos && subAbaPartidas === "final") ? (
+              <div className="bg-white border border-slate-200/80 rounded-3xl p-6 shadow-xs">
+                <ChaveamentoMataMata
+                  partidas={isMataMata ? partidas : partidasDoMataMata}
+                  onSalvarResultado={atualizarResultadoPartida}
+                  jogadores={jogadores}
+                />
+              </div>
+            ) : (
+              <ListaPartida
+                partidas={isGrupos ? partidasDosGrupos : partidas}
                 onSalvarResultado={atualizarResultadoPartida}
                 jogadores={jogadores}
               />
-            </div>
-          ) : (
-            <ListaPartida
-              partidas={partidas}
-              onSalvarResultado={atualizarResultadoPartida}
-              jogadores={jogadores}
-            />
-          ))}
+            )}
+          </div>
+        )}
 
         {abaAtiva === "times" && (
           <AbaTimes
