@@ -9,7 +9,6 @@ import { TabelaArtilharia } from "../components/TabelaArtilharia";
 import { ligasIniciais } from "../dados/dadosIniciais";
 import { ChaveamentoMataMata } from "../components/ChaveamentoMataMata";
 
-
 export default function PaginaGerenciarLiga() {
   const { id } = useParams();
   const navigate = useNavigate(); // Hook para mudar de página via código
@@ -36,7 +35,7 @@ export default function PaginaGerenciarLiga() {
     // 4. Redireciona o usuário para o dashboard
     navigate("/dashbord");
   }
-  
+
   // 1. Busca primeiro nas ligas salvas no navegador; se não houver, usa a lista inicial
   const ligasSalvas = localStorage.getItem("ligas_cadastradas");
   const todasAsLigas = ligasSalvas ? JSON.parse(ligasSalvas) : ligasIniciais;
@@ -276,6 +275,7 @@ export default function PaginaGerenciarLiga() {
       partidas: partidasDaFaseDeGrupos,
     };
   }
+
   //funcao geral que pode chamar outras funcoes dependendo do formato da competicao
   function gerarPartidas() {
     if (!podeGerarRodadas) return;
@@ -306,6 +306,7 @@ export default function PaginaGerenciarLiga() {
       for (let j = i + 1; j < times.length; j++) {
         novasPartidas.push({
           id: contadorId,
+          fase: "Rodada",
           idMandante: times[i].id,
           nomeMandante: times[i].nome,
           idVisitante: times[j].id,
@@ -408,11 +409,12 @@ export default function PaginaGerenciarLiga() {
   }
 
   function calcularClassificacao(listaTimes, listaPartidas) {
-    // FILTRO DE PROTEÇÃO: A classificação só vai olhar para os jogos da fase de grupos!
-    // Assim o histórico fica congelado e protegido para sempre.
-    const partidasGrupos = listaPartidas.filter(
-      (p) => p.fase && p.fase.startsWith("Grupo"),
-    );
+    // FILTRO CORRIGIDO:
+    // Em ligas de grupos, considera apenas os jogos de grupo.
+    // Em ligas de pontos corridos normais, considera todas as partidas da liga.
+    const partidasValidasParaTabela = isGrupos
+      ? listaPartidas.filter((p) => p.fase && p.fase.startsWith("Grupo"))
+      : listaPartidas;
 
     const tabelaBase = listaTimes.map((time) => ({
       idTime: time.id,
@@ -427,8 +429,8 @@ export default function PaginaGerenciarLiga() {
       golsSofridos: 0,
     }));
 
-    // IMPORTANTE: Iteramos apenas as partidas de grupo, não o mata-mata.
-    partidasGrupos.forEach((partida) => {
+    // Agora iteramos sobre a lista correta dependendo do formato:
+    partidasValidasParaTabela.forEach((partida) => {
       if (!partida.finalizada) return;
 
       const mandante = tabelaBase.find((t) => t.idTime === partida.idMandante);
@@ -482,129 +484,6 @@ export default function PaginaGerenciarLiga() {
       });
     }
     return gruposClassificados;
-  }
-
-  // Retorna true se a partida não puder mais ser alterada
-  function partidaEstaBloqueadaParaEdicao(partida) {
-    // Regra 1: Jogos de grupo travam assim que o mata-mata foi iniciado
-    const ehJogoDeGrupo = partida.fase && partida.fase.startsWith("Grupo");
-    if (ehJogoDeGrupo && temMataMataGerado) {
-      return true;
-    }
-
-    // Regra 2: Fases anteriores travam quando a fase seguinte já foi jogada
-    if (partida.proximoJogoId) {
-      const proximoJogo = partidas.find((p) => p.id === partida.proximoJogoId);
-      if (proximoJogo && proximoJogo.finalizada) {
-        return true;
-      }
-    }
-
-    // Regra 3: A grande Final trava assim que for finalizada
-    const ehFinal = partida.fase === "Final";
-    if (ehFinal && partida.finalizada) {
-      return true;
-    }
-
-    return false;
-  }
-
-  function atualizarResultadoPartida(
-    idPartida,
-    golsMandante,
-    golsVisitante,
-    autoresGols = [],
-    penaltisMandante = null,
-    penaltisVisitante = null,
-  ) {
-    // TRAVA DE SEGURANÇA: impede edições se a fase seguinte já começou
-    if (partidaEstaBloqueadaParaEdicao(partidaAtual)) {
-      alert(
-        "Esta partida não pode mais ser editada porque a fase seguinte já está em andamento!",
-      );
-      return;
-    }
-
-    const golsMandanteNum = Number(golsMandante);
-    const golsVisitanteNum = Number(golsVisitante);
-    const partidaAtual = partidas.find((p) => p.id === idPartida);
-    if (!partidaAtual) return;
-
-    let vencedorId = null;
-    let vencedorNome = "";
-
-    if (isMataMata || emFaseMataMata) {
-      if (golsMandanteNum > golsVisitanteNum) {
-        vencedorId = partidaAtual.idMandante;
-        vencedorNome = partidaAtual.nomeMandante;
-      } else if (golsVisitanteNum > golsMandanteNum) {
-        vencedorId = partidaAtual.idVisitante;
-        vencedorNome = partidaAtual.nomeVisitante;
-      } else {
-        const penMandanteNum = Number(penaltisMandante);
-        const penVisitanteNum = Number(penaltisVisitante);
-
-        if (penMandanteNum > penVisitanteNum) {
-          vencedorId = partidaAtual.idMandante;
-          vencedorNome = partidaAtual.nomeMandante;
-        } else if (penVisitanteNum > penMandanteNum) {
-          vencedorId = partidaAtual.idVisitante;
-          vencedorNome = partidaAtual.nomeVisitante;
-        } else {
-          alert("A disputa de pênaltis precisa ter um vencedor!");
-          return;
-        }
-      }
-    }
-
-    const partidasAtualizadas = partidas.map((partida) => {
-      if (partida.id === idPartida) {
-        return {
-          ...partida,
-          golsMandante: golsMandanteNum,
-          golsVisitante: golsVisitanteNum,
-          autoresGols: autoresGols,
-          penaltisMandante:
-            penaltisMandante !== null ? Number(penaltisMandante) : null,
-          penaltisVisitante:
-            penaltisVisitante !== null ? Number(penaltisVisitante) : null,
-          finalizada: true,
-          vencedorId: vencedorId,
-        };
-      }
-
-      if (
-        (isMataMata || emFaseMataMata) &&
-        partida.id === partidaAtual.proximoJogoId
-      ) {
-        if (partidaAtual.posicaoProximoJogo === "mandante") {
-          return {
-            ...partida,
-            idMandante: vencedorId,
-            nomeMandante: vencedorNome,
-          };
-        } else {
-          return {
-            ...partida,
-            idVisitante: vencedorId,
-            nomeVisitante: vencedorNome,
-          };
-        }
-      }
-
-      return partida;
-    });
-
-    setPartidas(partidasAtualizadas);
-    salvarDadosDaLiga(times, partidasAtualizadas, jogadores);
-
-    if (!isMataMata) {
-      const novaClassificacao = calcularClassificacao(
-        times,
-        partidasAtualizadas,
-      );
-      setClassificacao(novaClassificacao);
-    }
   }
 
   function cadastrarTime(dadosTime) {
@@ -684,6 +563,7 @@ export default function PaginaGerenciarLiga() {
     salvarDadosDaLiga(timesFiltrados, partidasFiltradas, jogadoresFiltrados);
   }
 
+  // --- 1. ORDENAÇÃO E TABELAS (CALCULADOS ANTES PARA EVITAR ERROS) ---
   const classificacaoOrdenada = [...classificacao].sort((timeA, timeB) => {
     if (timeB.pontos === timeA.pontos) {
       const saldoA = timeA.golsPro - timeA.golsSofridos;
@@ -702,12 +582,53 @@ export default function PaginaGerenciarLiga() {
       )
     : [];
 
+  // --- 2. IDENTIFICAÇÃO DE FASES E GRUPOS ---
+  // Separa as partidas de grupos das partidas eliminatórias
+  const partidasDosGrupos = partidas.filter((p) => p.fase?.startsWith("Grupo"));
+  const partidasDoMataMata = partidas.filter(
+    (p) => !p.fase?.startsWith("Grupo"),
+  );
+  const temMataMataGerado = partidasDoMataMata.length > 0;
+
+  // Se existir algum jogo que NÃO seja de grupo, já estamos no mata-mata
+  const jaEstaNoMataMata = partidas.some((p) => !p.fase?.startsWith("Grupo"));
+
+  const emFaseMataMata =
+    isMataMata ||
+    (isGrupos && partidas.some((p) => p.fase && !p.fase.startsWith("Grupo")));
+
+  // --- 3. STATUS DA COMPETIÇÃO E FINAL ---
+  // 1. Identifica a grande final (se existir no torneio)
+  const partidaFinal = partidas.find((p) => p.fase === "Final");
+  const finalFoiConcluida = Boolean(partidaFinal && partidaFinal.finalizada);
+
+  // 2. Calcula o status automático de acordo com as regras de cada formato
   let statusCompeticao = "Em andamento";
+
   if (partidas.length === 0) {
     statusCompeticao = "Não iniciada";
-  } else if (partidas.every((p) => p.finalizada)) {
-    statusCompeticao = "Finalizada";
+  } else if (isMataMata) {
+    // No mata-mata puro, só termina quando a Final acaba
+    if (finalFoiConcluida) {
+      statusCompeticao = "Finalizada";
+    }
+  } else if (isGrupos) {
+    // No formato misto, precisa ter entrado no mata-mata E a Final ter acabado
+    if (temMataMataGerado && finalFoiConcluida) {
+      statusCompeticao = "Finalizada";
+    }
+  } else {
+    // Em Pontos Corridos tradicional, termina quando todos os jogos forem finalizados
+    if (partidas.length > 0 && partidas.every((p) => p.finalizada)) {
+      statusCompeticao = "Finalizada";
+    }
   }
+
+  const podeAvancarMataMata =
+    isGrupos &&
+    partidas.length > 0 &&
+    partidas.every((p) => p.finalizada) &&
+    !jaEstaNoMataMata;
 
   const liderAtual =
     classificacaoOrdenada.length > 0 ? classificacaoOrdenada[0] : null;
@@ -719,26 +640,164 @@ export default function PaginaGerenciarLiga() {
     return acumulador;
   }, 0);
 
-  // Se existir algum jogo que NÃO seja de grupo, já estamos no mata-mata
-  //ve se alguma partida comeca com grupo, se nao, ja esta no mata mata
-  const jaEstaNoMataMata = partidas.some((p) => !p.fase.startsWith("Grupo"));
+  // --- 4. LÓGICA DO CAMPEÃO ---
+  let nomeCampeao = null;
 
-  const podeAvancarMataMata =
-    isGrupos &&
-    partidas.length > 0 &&
-    partidas.every((p) => p.finalizada) &&
-    !jaEstaNoMataMata;
+  if (statusCompeticao === "Finalizada") {
+    if (isMataMata || isGrupos) {
+      if (partidaFinal) {
+        if (partidaFinal.golsMandante > partidaFinal.golsVisitante) {
+          nomeCampeao = partidaFinal.nomeMandante;
+        } else if (partidaFinal.golsVisitante > partidaFinal.golsMandante) {
+          nomeCampeao = partidaFinal.nomeVisitante;
+        } else {
+          nomeCampeao =
+            Number(partidaFinal.penaltisMandante) >
+            Number(partidaFinal.penaltisVisitante)
+              ? partidaFinal.nomeMandante
+              : partidaFinal.nomeVisitante;
+        }
+      }
+    } else {
+      // Pontos corridos: primeiro colocado da tabela
+      if (classificacaoOrdenada.length > 0) {
+        nomeCampeao = classificacaoOrdenada[0].nomeTime;
+      }
+    }
+  }
 
-  const emFaseMataMata =
-    isMataMata ||
-    (partidas.length > 0 && partidas.some((p) => !p.fase.startsWith("Grupo")));
+  // --- 5. FUNÇÕES QUE DEPENDEM DAS VARIÁVEIS ACIMA ---
+  // Retorna true se a partida não puder mais ser alterada
+  function partidaEstaBloqueadaParaEdicao(partida) {
+    if (statusCompeticao === "Finalizada") {
+      return true;
+    }
 
-  // Separa as partidas de grupos das partidas eliminatórias
-  const partidasDosGrupos = partidas.filter((p) => p.fase.startsWith("Grupo"));
-  const partidasDoMataMata = partidas.filter(
-    (p) => !p.fase.startsWith("Grupo"),
-  );
-  const temMataMataGerado = partidasDoMataMata.length > 0;
+    // Regra 1: Jogos de grupo travam assim que o mata-mata foi iniciado
+    const ehJogoDeGrupo = partida.fase && partida.fase?.startsWith("Grupo");
+    if (ehJogoDeGrupo && temMataMataGerado) {
+      return true;
+    }
+
+    // Regra 2: Fases anteriores travam quando a fase seguinte já foi jogada
+    if (partida.proximoJogoId) {
+      const proximoJogo = partidas.find((p) => p.id === partida.proximoJogoId);
+      if (proximoJogo && proximoJogo.finalizada) {
+        return true;
+      }
+    }
+
+    // Regra 3: A grande Final trava assim que for finalizada
+    const ehFinal = partida.fase === "Final";
+    if (ehFinal && partida.finalizada) {
+      return true;
+    }
+
+    return false;
+  }
+
+  function atualizarResultadoPartida(
+    idPartida,
+    golsMandante,
+    golsVisitante,
+    autoresGols = [],
+    penaltisMandante = null,
+    penaltisVisitante = null,
+  ) {
+    const partidaAtual = partidas.find((p) => p.id === idPartida);
+    if (!partidaAtual) return;
+
+    // TRAVA DE SEGURANÇA: impede edições se a fase seguinte já começou
+    if (partidaEstaBloqueadaParaEdicao(partidaAtual)) {
+      alert(
+        "Esta partida não pode mais ser editada porque a fase seguinte já está em andamento ou a competição terminou!",
+      );
+      return;
+    }
+
+    const golsMandanteNum = Number(golsMandante);
+    const golsVisitanteNum = Number(golsVisitante);
+
+    let vencedorId = null;
+    let vencedorNome = "";
+
+    const ehPartidaEliminatoria =
+      isMataMata ||
+      (isGrupos && partidaAtual.fase && !partidaAtual.fase.startsWith("Grupo"));
+
+    if (ehPartidaEliminatoria) {
+      if (golsMandanteNum > golsVisitanteNum) {
+        vencedorId = partidaAtual.idMandante;
+        vencedorNome = partidaAtual.nomeMandante;
+      } else if (golsVisitanteNum > golsMandanteNum) {
+        vencedorId = partidaAtual.idVisitante;
+        vencedorNome = partidaAtual.nomeVisitante;
+      } else {
+        const penMandanteNum = Number(penaltisMandante);
+        const penVisitanteNum = Number(penaltisVisitante);
+
+        if (penMandanteNum > penVisitanteNum) {
+          vencedorId = partidaAtual.idMandante;
+          vencedorNome = partidaAtual.nomeMandante;
+        } else if (penVisitanteNum > penMandanteNum) {
+          vencedorId = partidaAtual.idVisitante;
+          vencedorNome = partidaAtual.nomeVisitante;
+        } else {
+          alert("A disputa de pênaltis precisa ter um vencedor!");
+          return;
+        }
+      }
+    }
+
+    const partidasAtualizadas = partidas.map((partida) => {
+      if (partida.id === idPartida) {
+        return {
+          ...partida,
+          golsMandante: golsMandanteNum,
+          golsVisitante: golsVisitanteNum,
+          autoresGols: autoresGols,
+          penaltisMandante:
+            penaltisMandante !== null ? Number(penaltisMandante) : null,
+          penaltisVisitante:
+            penaltisVisitante !== null ? Number(penaltisVisitante) : null,
+          finalizada: true,
+          vencedorId: vencedorId,
+        };
+      }
+
+      if (
+        (isMataMata || emFaseMataMata) &&
+        partida.id === partidaAtual.proximoJogoId
+      ) {
+        if (partidaAtual.posicaoProximoJogo === "mandante") {
+          return {
+            ...partida,
+            idMandante: vencedorId,
+            nomeMandante: vencedorNome,
+          };
+        } else {
+          return {
+            ...partida,
+            idVisitante: vencedorId,
+            nomeVisitante: vencedorNome,
+          };
+        }
+      }
+
+      return partida;
+    });
+
+    setPartidas(partidasAtualizadas);
+    salvarDadosDaLiga(times, partidasAtualizadas, jogadores);
+
+    if (!isMataMata) {
+      const novaClassificacao = calcularClassificacao(
+        times,
+        partidasAtualizadas,
+      );
+      setClassificacao(novaClassificacao);
+    }
+  }
 
   return (
     <div className="min-h-screen bg-slate-50/60 text-slate-900 pb-16">
@@ -879,21 +938,44 @@ export default function PaginaGerenciarLiga() {
             </p>
           </div>
 
-          <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs flex flex-col justify-between">
+          <div
+            className={`border rounded-2xl p-5 shadow-xs flex flex-col justify-between transition-all ${
+              statusCompeticao === "Finalizada"
+                ? "bg-amber-50/70 border-amber-300"
+                : "bg-white border-slate-200/80"
+            }`}
+          >
             <div className="flex justify-between items-center text-slate-400">
-              <span className="text-xs font-bold uppercase tracking-wider">
-                {isMataMata ? "Status Mata-Mata" : "Líder Atual"}
+              <span
+                className={`text-xs font-bold uppercase tracking-wider ${
+                  statusCompeticao === "Finalizada"
+                    ? "text-amber-700"
+                    : "text-slate-400"
+                }`}
+              >
+                {statusCompeticao === "Finalizada"
+                  ? "🏆 Campeão"
+                  : isMataMata
+                    ? "Status Mata-Mata"
+                    : "Líder Atual"}
               </span>
-              <span>🏆</span>
+              <span>{statusCompeticao === "Finalizada" ? "👑" : "🏆"}</span>
             </div>
-            <p className="text-sm font-black text-slate-800 mt-2 truncate">
-              {isMataMata
-                ? partidas.find((p) => p.fase === "Final" && p.finalizada)
-                  ? "Campeão Definido"
-                  : "Chaveamento Aberto"
-                : liderAtual && liderAtual.jogos > 0
-                  ? liderAtual.nomeTime
-                  : "Aguardando início"}
+
+            <p
+              className={`text-sm font-black mt-2 truncate ${
+                statusCompeticao === "Finalizada"
+                  ? "text-amber-900"
+                  : "text-slate-800"
+              }`}
+            >
+              {statusCompeticao === "Finalizada"
+                ? nomeCampeao || "Campeão Definido"
+                : isMataMata
+                  ? "Chaveamento Aberto"
+                  : liderAtual && liderAtual.jogos > 0
+                    ? liderAtual.nomeTime
+                    : "Aguardando início"}
             </p>
           </div>
         </div>
