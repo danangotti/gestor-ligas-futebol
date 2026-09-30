@@ -77,9 +77,6 @@ export default function PaginaGerenciarLiga() {
       return liga;
     });
 
-    // 3. Atualiza o estado da página atual
-    setLigaAtual(ligaModificada);
-
     // 4. Salva a lista completa no LocalStorage
     localStorage.setItem("ligas_cadastradas", JSON.stringify(ligasAtualizadas));
   }
@@ -269,7 +266,11 @@ export default function PaginaGerenciarLiga() {
       // Atualiza estados e salva
       setTimes(resultado.timesAtualizados);
       setPartidas(resultado.partidas);
-      salvarDadosDaLiga(resultado.timesComGrupo, resultado.partidas, jogadores);
+      salvarDadosDaLiga(
+        resultado.timesAtualizados,
+        resultado.partidas,
+        jogadores,
+      );
       return;
     }
 
@@ -311,15 +312,15 @@ export default function PaginaGerenciarLiga() {
       //fazer um for passando em cada grupo, ordenar/pegar os {classPorGrupo} primeiros de cada grupo
       for(let i = 0; i < qtdGrupos;i++){
         //pegar o grupo correspondente ao indice
-        const timesGrupo = tabelasPorGrupo[i].times;
-        
-        console.log(`Times do grupo ${i}:`, timesGrupo[0]);
+        const timesGrupo = tabelasPorGrupo[i].times;       
 
         for(let j = 0; j < classPorGrupo;j++){
           //adicionar ao vetor os classificados desse grupo
           classificadosMataMata.push(timesGrupo[j]);
         }
       }
+
+      //depois de montar o vetor com todos os times
     }
   }
 
@@ -481,39 +482,44 @@ export default function PaginaGerenciarLiga() {
   }
 
   function cadastrarTime(dadosTime) {
-    // 1. Obter o grupo selecionado a partir do objeto recebido
-    const grupoSelecionado = dadosTime.grupo;
-    const limitePorGrupo = ligaAtual?.configuracao?.timesPorGrupo;
+    // 1. Definições Iniciais
+    const grupoSelecionado = dadosTime.grupo || null;
+    const limitePorGrupo = Number(ligaAtual?.configuracao?.timesPorGrupo) || 4; // Garante um número válido
+    const totalEsperado = Number(totalTimeEsperados) || 16; // Previne validações falhadas caso seja undefined
 
-    // 2. Se o torneio utilizar grupos e o time tiver grupo definido, valida o limite desse grupo
-    if (grupoSelecionado && limitePorGrupo) {
+    // 2. Validação por Grupo (apenas se aplicável)
+    if (isGrupos && grupoSelecionado) {
       const timesNoGrupo = times.filter(
         (t) => t.grupo === grupoSelecionado,
       ).length;
 
       if (timesNoGrupo >= limitePorGrupo) {
         alert(
-          `O Grupo ${grupoSelecionado} já está cheio! (Limite: ${limitePorGrupo})`,
+          `O Grupo ${grupoSelecionado} já atingiu o limite de ${limitePorGrupo} equipas!`,
         );
         return;
       }
     }
 
-    // 3. Validação do total geral de clubes do torneio
-    if (times.length >= totalTimeEsperados) {
-      return alert("Limite de times atingido!");
+    // 3. Validação Global da Liga
+    if (times.length >= totalEsperado) {
+      alert("O limite total de equipas desta liga já foi atingido!");
+      return;
     }
 
+    // 4. Criação e Inserção
     const idGerado = Date.now();
     const novoClube = {
       id: idGerado,
-      grupo: dadosTime.grupo || null,
+      grupo: grupoSelecionado,
       nome: dadosTime.nome,
       sigla: dadosTime.sigla,
       cor: dadosTime.cor,
     };
 
     const novosTimes = [...times, novoClube];
+
+    // Atualiza o estado
     setTimes(novosTimes);
 
     if (!isMataMata) {
@@ -521,6 +527,7 @@ export default function PaginaGerenciarLiga() {
       setClassificacao(novaClassificacao);
     }
 
+    // 5. Salva na Base de Dados (LocalStorage)
     salvarDadosDaLiga(novosTimes, partidas, jogadores);
   }
 
