@@ -297,30 +297,70 @@ export default function PaginaGerenciarLiga() {
     salvarDadosDaLiga(times, novasPartidas, jogadores);
   }
 
-  function avancarParaMataMata(){
+  function avancarParaMataMata() {
     //conferir se todos os jogos do mata mata foram finalizados
     //percorrer o vetor das partidasDaFaseDeGrupos, e ver se finalizada === true
-    const todasFinalizadas = partidas.every((partida) => partida.finalizada === true);
+    const todasFinalizadas = partidas.every(
+      (partida) => partida.finalizada === true,
+    );
     //retorna true se todas as partidas tiverem finalizada === true
 
-    if(todasFinalizadas){
+    if (todasFinalizadas) {
       //montar um array com todos os times que vao avancar pro mata mata
       //quantos de cada grupo passam, e quantos grupos tem
       const qtdGrupos = ligaAtual.configuracao.qtdGrupos;
       const classPorGrupo = ligaAtual.configuracao.classificadosPorGrupo;
       const classificadosMataMata = [];
       //fazer um for passando em cada grupo, ordenar/pegar os {classPorGrupo} primeiros de cada grupo
-      for(let i = 0; i < qtdGrupos;i++){
-        //pegar o grupo correspondente ao indice
-        const timesGrupo = tabelasPorGrupo[i].times;       
 
-        for(let j = 0; j < classPorGrupo;j++){
-          //adicionar ao vetor os classificados desse grupo
-          classificadosMataMata.push(timesGrupo[j]);
+      //se classificar 1 por grupo, pega o primeiro de cada grupo
+      if (classPorGrupo === 1) {
+        for (let i = 0; i < qtdGrupos; i++) {
+          //pegar o grupo correspondente ao indice
+          const timesGrupo = tabelasPorGrupo[i].times;
+
+          classificadosMataMata.push({
+            id: timesGrupo[0].idTime,
+            nome: timesGrupo[0].nomeTime,
+          });
         }
       }
+      //se classificar 2 por grupo -> pegar o primeiro de um grupo, e dps o segundo do proximo
+      //indice 0 do grupo i, e indice 1 do grupo i + 1
+      else if (classPorGrupo === 2) {
+        // Anda de 2 em 2 grupos para pegar pares (A com B, C com D...)
+        for (let i = 0; i < qtdGrupos; i += 2) {
+          const grupo1 = tabelasPorGrupo[i].times;
+          const grupo2 = tabelasPorGrupo[i + 1].times;
 
-      //depois de montar o vetor com todos os times
+          // Jogo 1: 1º do Grupo 1 vs 2º do Grupo 2
+          classificadosMataMata.push({
+            id: grupo1[0].idTime,
+            nome: grupo1[0].nomeTime,
+          });
+          classificadosMataMata.push({
+            id: grupo2[1].idTime,
+            nome: grupo2[1].nomeTime,
+          });
+
+          // Jogo 2: 1º do Grupo 2 vs 2º do Grupo 1
+          classificadosMataMata.push({
+            id: grupo2[0].idTime,
+            nome: grupo2[0].nomeTime,
+          });
+          classificadosMataMata.push({
+            id: grupo1[1].idTime,
+            nome: grupo1[1].nomeTime,
+          });
+        }
+      }
+      const partidasMataMata = gerarEstruturaMataMata(classificadosMataMata);
+
+      setPartidas(partidasMataMata);
+
+      salvarDadosDaLiga(times, partidasMataMata, jogadores);
+
+      setAbaAtiva("partidas");
     }
   }
 
@@ -593,6 +633,21 @@ export default function PaginaGerenciarLiga() {
     return acumulador;
   }, 0);
 
+  // Se existir algum jogo que NÃO seja de grupo, já estamos no mata-mata
+  //ve se alguma partida comeca com grupo, se nao, ja esta no mata mata
+  const jaEstaNoMataMata = partidas.some((p) => !p.fase.startsWith("Grupo"));
+
+  const podeAvancarMataMata =
+    isGrupos &&
+    partidas.length > 0 &&
+    partidas.every((p) => p.finalizada) &&
+    !jaEstaNoMataMata;
+
+  const emFaseMataMata =
+      isMataMata ||
+      (partidas.length > 0 &&
+        partidas.some((p) => !p.fase.startsWith("Grupo")));
+
   return (
     <div className="min-h-screen bg-slate-50/60 text-slate-900 pb-16">
       <HeaderDashbord />
@@ -792,6 +847,17 @@ export default function PaginaGerenciarLiga() {
           >
             Artilharia
           </button>
+
+          {/* Botão em destaque para avançar de fase */}
+          {podeAvancarMataMata && (
+            <button
+              type="button"
+              onClick={avancarParaMataMata}
+              className="px-5 py-2 rounded-xl text-xs sm:text-sm font-bold bg-green-600 hover:bg-green-700 text-white shadow-sm transition-all whitespace-nowrap cursor-pointer active:scale-95 animate-pulse"
+            >
+              ⚡ Iniciar Mata-Mata
+            </button>
+          )}
         </div>
 
         {/* 4. Área de Conteúdo */}
@@ -841,7 +907,7 @@ export default function PaginaGerenciarLiga() {
         )}
 
         {abaAtiva === "partidas" &&
-          (isMataMata ? (
+          (emFaseMataMata ? (
             <div className="bg-white border border-slate-200/80 rounded-3xl p-6 shadow-xs">
               <ChaveamentoMataMata
                 partidas={partidas}
