@@ -175,92 +175,74 @@ export default function PaginaGerenciarLiga() {
     return novasPartidas;
   }
 
-  // Algoritmo para sortear grupos e gerar os jogos internos
   function gerarFaseGrupos(listaTimes) {
-    const letras = ["A", "B", "C", "D", "E", "F", "G", "H"];
-    //sorteio
-    // 1.1 pega as configurações que o usuário escolheu
-    const qtdGrupos = ligaAtual.configuracao.qtdGrupos;
-    const timesPorGrupo = ligaAtual.configuracao.timesPorGrupo;
+    // 1. Pegar as configurações que eu salvei na criação da liga
+    const configuracao = ligaAtual?.configuracao || {};
+    const quantidadeGrupos = configuracao.qtdGrupos || 2;
+    // Se for "ida_e_volta", sabemos que precisa ter o jogo invertido
+    const ehTurnoDuplo = configuracao.tipoTurno === "ida_e_volta";
 
-    // 1.2 cria uma cópia da lista de times e embaralhamos (Sorteio)
-    const timesSorteados = [...listaTimes].sort(() => Math.random() - 0.5);
+    // Letras base para saber quais grupos existem (ex: se qtdGrupos for 2, pega ["A", "B"])
+    const letrasValidas = ["A", "B", "C", "D", "E", "F", "G", "H"].slice(
+      0,
+      quantidadeGrupos,
+    );
 
-    //dividir em grupos
-    const grupos = []; // vetor que guarda os grupos
-    let indiceLetra = 0;
-
-    //for que anda de acordo com a qtd de times por grupo
-    for (let i = 0; i < timesSorteados.length; i += timesPorGrupo) {
-      //metodo slice fatia/separa os times sorteados para um novo array(fatiaDoGrupo)
-      const fatiaDoGrupo = timesSorteados.slice(i, i + timesPorGrupo);
-
-      //metodo push adiciona no final de um vetor
-      //vai guardar um objeto -> {} (guarda a chave que é a letra do grupo, e o valor que é o vetor com os times daquele grupo)
-      grupos.push({
-        letra: letras[indiceLetra],
-        times: fatiaDoGrupo,
-      });
-
-      indiceLetra++;
-    }
     const partidasDaFaseDeGrupos = [];
-    let contadorId = 1;
+    let contadorIdPartida = 1;
 
-    //tabela: partidas apenas entre times do mesmo grupo
-    for (let g = 0; g < grupos.length; g++) {
-      const grupoAtual = grupos[g]; //pega o grupo pelo indice
-      const timesDesteGrupo = grupoAtual.times; //pega os times do grupo
-      const letraDoGrupo = grupoAtual.letra; //pega a letra do grupo
+    // 2. Passar por cada grupo (Grupo A, Grupo B...) de forma isolada
+    letrasValidas.forEach((letraDoGrupo) => {
+      // IMPORTANTE: Em vez de fatiar ou sortear aleatório,
+      // eu filtro apenas os times que foram cadastrados para ESTE grupo!
+      const timesDesteGrupo = listaTimes.filter(
+        (time) => time.grupo === letraDoGrupo,
+      );
 
-      // cruzar os times desse grupo
+      // 3. Gerar confrontos de todos contra todos DENTRO deste grupo
       for (let i = 0; i < timesDesteGrupo.length; i++) {
         for (let j = i + 1; j < timesDesteGrupo.length; j++) {
-          // aq dentro cria o jogo
-          // mandante: timesDesteGrupo[i]
-          // visitante: timesDesteGrupo[j]
+          const timeCasa = timesDesteGrupo[i];
+          const timeVisitante = timesDesteGrupo[j];
 
-          //cria o objeto da partida e coloca no final(push) do vetor partidasDaFaseDeGrupos
+          // JOGO DE IDA (sempre existe, tanto no turno único quanto no duplo)
           partidasDaFaseDeGrupos.push({
-            id: contadorId,
+            id: contadorIdPartida++,
             fase: `Grupo ${letraDoGrupo}`,
-            idMandante: timesDesteGrupo[i].id,
-            nomeMandante: timesDesteGrupo[i].nome,
-            idVisitante: timesDesteGrupo[j].id,
-            nomeVisitante: timesDesteGrupo[j].nome,
+            rodada: 1, // identifica a rodada
+            idMandante: timeCasa.id,
+            nomeMandante: timeCasa.nome,
+            idVisitante: timeVisitante.id,
+            nomeVisitante: timeVisitante.nome,
             golsMandante: 0,
             golsVisitante: 0,
             finalizada: false,
             autoresGols: [],
           });
-          contadorId++; //aumenta o valor do id para a proxima partida
+
+          // JOGO DE VOLTA (só adiciono se o campeonato for de ida e volta)
+          if (ehTurnoDuplo) {
+            partidasDaFaseDeGrupos.push({
+              id: contadorIdPartida++,
+              fase: `Grupo ${letraDoGrupo}`,
+              rodada: 2, // jogo do segundo turno
+              idMandante: timeVisitante.id, // inverte: visitante vira mandante
+              nomeMandante: timeVisitante.nome,
+              idVisitante: timeCasa.id, // inverte: mandante vira visitante
+              nomeVisitante: timeCasa.nome,
+              golsMandante: 0,
+              golsVisitante: 0,
+              finalizada: false,
+              autoresGols: [],
+            });
+          }
         }
       }
-    }
+    });
 
-    //guardar o grupo no objeto de cada time
-
-    const timesComGrupo = [];
-
-    for (let g = 0; g < grupos.length; g++) {
-      const grupoAtual = grupos[g];
-      //pega o grupo pelo indice
-
-      for (let t = 0; t < grupoAtual.times.length; t++) {
-        const timeOriginal = grupoAtual.times[t];
-        //pega o time do vetor grupoatual
-
-        //adiciona no vetor timesComGrupo com a nova propriedade
-        timesComGrupo.push({
-          ...timeOriginal, // mantem id, nome, sigla, cor
-          grupo: grupoAtual.letra, // adiciona a propriedade nova, o grupo
-        });
-      }
-    }
-
-    // devolve os times atualizados e a lista de jogos prontos
+    // Retorno a lista de times intacta (já que eles já têm seu grupo) e as partidas prontas
     return {
-      timesAtualizados: timesComGrupo,
+      timesAtualizados: listaTimes,
       partidas: partidasDaFaseDeGrupos,
     };
   }
@@ -305,6 +287,33 @@ export default function PaginaGerenciarLiga() {
 
     setPartidas(novasPartidas);
     salvarDadosDaLiga(times, novasPartidas, jogadores);
+  }
+
+  function avancarParaMataMata(){
+    //conferir se todos os jogos do mata mata foram finalizados
+    //percorrer o vetor das partidasDaFaseDeGrupos, e ver se finalizada === true
+    const todasFinalizadas = partidas.every((partida) => partida.finalizada === true);
+    //retorna true se todas as partidas tiverem finalizada === true
+
+    if(todasFinalizadas){
+      //montar um array com todos os times que vao avancar pro mata mata
+      //quantos de cada grupo passam, e quantos grupos tem
+      const qtdGrupos = ligaAtual.configuracao.qtdGrupos;
+      const classPorGrupo = ligaAtual.configuracao.classificadosPorGrupo;
+      const classificadosMataMata = [];
+      //fazer um for passando em cada grupo, ordenar/pegar os {classPorGrupo} primeiros de cada grupo
+      for(let i = 0; i < qtdGrupos;i++){
+        //pegar o grupo correspondente ao indice
+        const timesGrupo = tabelasPorGrupo[i].times;
+        
+        console.log(`Times do grupo ${i}:`, timesGrupo[0]);
+
+        for(let j = 0; j < classPorGrupo;j++){
+          //adicionar ao vetor os classificados desse grupo
+          classificadosMataMata.push(timesGrupo[j]);
+        }
+      }
+    }
   }
 
   function calcularClassificacao(listaTimes, listaPartidas) {
@@ -465,6 +474,19 @@ export default function PaginaGerenciarLiga() {
   }
 
   function cadastrarTime(dadosTime) {
+    // times cadastrados no grupo
+    const timesNoGrupo = times.filter(
+      (t) => t.grupo === grupoSelecionado,
+    ).length;
+    const limitePorGrupo = configuracao?.timesPorGrupo || 4;
+
+    if (timesNoGrupo >= limitePorGrupo) {
+      alert(
+        `O Grupo ${grupoSelecionado} já está cheio! (Limite: ${limitePorGrupo})`,
+      );
+      return;
+    }
+
     if (times.length >= totalTimeEsperados) {
       return alert("Limite de times atingido!");
     }
