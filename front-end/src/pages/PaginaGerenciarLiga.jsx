@@ -61,18 +61,26 @@ export default function PaginaGerenciarLiga() {
     const ligasSalvas = localStorage.getItem("ligas_cadastradas");
     const todasAsLigas = ligasSalvas ? JSON.parse(ligasSalvas) : ligasIniciais;
 
+    // 1. Objeto atualizado com os novos dados
+    const ligaModificada = {
+      ...ligaAtual,
+      times: novosTimes,
+      partidas: novasPartidas,
+      jogadores: novosJogadores,
+    };
+
+    // 2. Converte ambos os IDs para String antes de comparar
     const ligasAtualizadas = todasAsLigas.map((liga) => {
-      if (liga.id === ligaAtual.id) {
-        return {
-          ...liga,
-          times: novosTimes,
-          partidas: novasPartidas,
-          jogadores: novosJogadores,
-        };
+      if (String(liga.id) === String(ligaAtual.id)) {
+        return ligaModificada;
       }
       return liga;
     });
 
+    // 3. Atualiza o estado da página atual
+    setLigaAtual(ligaModificada);
+
+    // 4. Salva a lista completa no LocalStorage
     localStorage.setItem("ligas_cadastradas", JSON.stringify(ligasAtualizadas));
   }
 
@@ -180,7 +188,7 @@ export default function PaginaGerenciarLiga() {
     const configuracao = ligaAtual?.configuracao || {};
     const quantidadeGrupos = configuracao.qtdGrupos || 2;
     // Se for "ida_e_volta", sabemos que precisa ter o jogo invertido
-    const ehTurnoDuplo = configuracao.tipoTurno === "ida_e_volta";
+    const ehTurnoDuplo = configuracao.turnoGrupos === "Turno e Returno";
 
     // Letras base para saber quais grupos existem (ex: se qtdGrupos for 2, pega ["A", "B"])
     const letrasValidas = ["A", "B", "C", "D", "E", "F", "G", "H"].slice(
@@ -194,7 +202,7 @@ export default function PaginaGerenciarLiga() {
     // 2. Passar por cada grupo (Grupo A, Grupo B...) de forma isolada
     letrasValidas.forEach((letraDoGrupo) => {
       // IMPORTANTE: Em vez de fatiar ou sortear aleatório,
-      // eu filtro apenas os times que foram cadastrados para ESTE grupo!
+      // filtro apenas os times que foram cadastrados para ESTE grupo!
       const timesDesteGrupo = listaTimes.filter(
         (time) => time.grupo === letraDoGrupo,
       );
@@ -239,7 +247,6 @@ export default function PaginaGerenciarLiga() {
         }
       }
     });
-
     // Retorno a lista de times intacta (já que eles já têm seu grupo) e as partidas prontas
     return {
       timesAtualizados: listaTimes,
@@ -474,19 +481,25 @@ export default function PaginaGerenciarLiga() {
   }
 
   function cadastrarTime(dadosTime) {
-    // times cadastrados no grupo
-    const timesNoGrupo = times.filter(
-      (t) => t.grupo === grupoSelecionado,
-    ).length;
-    const limitePorGrupo = configuracao?.timesPorGrupo || 4;
+    // 1. Obter o grupo selecionado a partir do objeto recebido
+    const grupoSelecionado = dadosTime.grupo;
+    const limitePorGrupo = ligaAtual?.configuracao?.timesPorGrupo;
 
-    if (timesNoGrupo >= limitePorGrupo) {
-      alert(
-        `O Grupo ${grupoSelecionado} já está cheio! (Limite: ${limitePorGrupo})`,
-      );
-      return;
+    // 2. Se o torneio utilizar grupos e o time tiver grupo definido, valida o limite desse grupo
+    if (grupoSelecionado && limitePorGrupo) {
+      const timesNoGrupo = times.filter(
+        (t) => t.grupo === grupoSelecionado,
+      ).length;
+
+      if (timesNoGrupo >= limitePorGrupo) {
+        alert(
+          `O Grupo ${grupoSelecionado} já está cheio! (Limite: ${limitePorGrupo})`,
+        );
+        return;
+      }
     }
 
+    // 3. Validação do total geral de clubes do torneio
     if (times.length >= totalTimeEsperados) {
       return alert("Limite de times atingido!");
     }
