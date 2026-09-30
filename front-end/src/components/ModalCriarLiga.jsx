@@ -43,7 +43,7 @@ export default function ModalCriarLiga({
     "Pontos Corridos",
     "Fase de Grupos + Mata-Mata",
     "Mata-Mata",
-    "Pontos Corridos + Mata-Mata",
+    //Em breve: "Pontos Corridos + Mata-Mata",
   ];
 
   const mapeamentoFases = {

@@ -5,6 +5,7 @@ export function ChaveamentoMataMata({
   partidas,
   jogadores = [],
   onSalvarResultado,
+  verificarBloqueio
 }) {
   // Guarda o objeto do jogo que abriu no modal (ou null se nenhum)
   const [partidaSelecionada, setPartidaSelecionada] = useState(null);
@@ -122,19 +123,42 @@ export function ChaveamentoMataMata({
                       )}
 
                     {/* Botão de Ação */}
-                    <div className="mt-2 pt-2 border-t border-slate-100 flex justify-end">
-                      <button
-                        type="button"
-                        disabled={!timesProntos}
-                        onClick={() => setPartidaSelecionada(jogo)}
-                        className={`text-xs px-2.5 py-1 rounded-md font-medium transition-colors ${
-                          timesProntos
-                            ? "text-green-700 bg-green-50 hover:bg-green-100 cursor-pointer"
-                            : "text-slate-300 cursor-not-allowed"
-                        }`}
-                      >
-                        {jogo.finalizada ? "Editar Placar" : "Lançar Placar"}
-                      </button>
+                    <div className="mt-2 pt-2 border-t border-slate-100 flex justify-end items-center">
+                      {(() => {
+                        // 1. Verifica se esta partida específica está bloqueada
+                        const estaBloqueado = verificarBloqueio
+                          ? verificarBloqueio(jogo)
+                          : false;
+
+                        // 2. O botão só pode ser clicado se os dois times existirem E o jogo não estiver bloqueado
+                        const podeClicar = timesProntos && !estaBloqueado;
+
+                        // Se estiver bloqueado e já finalizado, mostra o cadeado indicativo
+                        if (estaBloqueado && jogo.finalizada) {
+                          return (
+                            <span className="text-[11px] font-semibold text-slate-400 flex items-center gap-1">
+                              🔒 Fase encerrada
+                            </span>
+                          );
+                        }
+
+                        return (
+                          <button
+                            type="button"
+                            disabled={!podeClicar}
+                            onClick={() => setPartidaSelecionada(jogo)}
+                            className={`text-xs px-2.5 py-1 rounded-md font-medium transition-colors ${
+                              podeClicar
+                                ? "text-green-700 bg-green-50 hover:bg-green-100 cursor-pointer"
+                                : "text-slate-300 cursor-not-allowed"
+                            }`}
+                          >
+                            {jogo.finalizada
+                              ? "Editar Placar"
+                              : "Lançar Placar"}
+                          </button>
+                        );
+                      })()}
                     </div>
                   </div>
                 );

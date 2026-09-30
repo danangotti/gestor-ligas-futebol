@@ -1,4 +1,4 @@
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { HeaderDashbord } from "../components/HeaderDashbord";
 import { useState } from "react";
 import { TabelaClassificacao } from "../components/TabelaClassificacao";
@@ -9,9 +9,34 @@ import { TabelaArtilharia } from "../components/TabelaArtilharia";
 import { ligasIniciais } from "../dados/dadosIniciais";
 import { ChaveamentoMataMata } from "../components/ChaveamentoMataMata";
 
+
 export default function PaginaGerenciarLiga() {
   const { id } = useParams();
+  const navigate = useNavigate(); // Hook para mudar de página via código
 
+  function handleExcluirLiga() {
+    const confirmacao = window.confirm(
+      `Tem certeza que deseja excluir a liga "${ligaAtual.nome}"? Esta ação não pode ser desfeita.`,
+    );
+
+    if (!confirmacao) return;
+
+    // 1. Busca todas as ligas gravadas no localStorage
+    const ligasSalvas = localStorage.getItem("ligas_cadastradas");
+    const listaCompleta = ligasSalvas ? JSON.parse(ligasSalvas) : ligasIniciais;
+
+    // 2. Filtra removendo a liga atual
+    const ligasAtualizadas = listaCompleta.filter(
+      (l) => String(l.id) !== String(ligaAtual.id),
+    );
+
+    // 3. Atualiza o LocalStorage
+    localStorage.setItem("ligas_cadastradas", JSON.stringify(ligasAtualizadas));
+
+    // 4. Redireciona o usuário para o dashboard
+    navigate("/dashbord");
+  }
+  
   // 1. Busca primeiro nas ligas salvas no navegador; se não houver, usa a lista inicial
   const ligasSalvas = localStorage.getItem("ligas_cadastradas");
   const todasAsLigas = ligasSalvas ? JSON.parse(ligasSalvas) : ligasIniciais;
@@ -459,6 +484,31 @@ export default function PaginaGerenciarLiga() {
     return gruposClassificados;
   }
 
+  // Retorna true se a partida não puder mais ser alterada
+  function partidaEstaBloqueadaParaEdicao(partida) {
+    // Regra 1: Jogos de grupo travam assim que o mata-mata foi iniciado
+    const ehJogoDeGrupo = partida.fase && partida.fase.startsWith("Grupo");
+    if (ehJogoDeGrupo && temMataMataGerado) {
+      return true;
+    }
+
+    // Regra 2: Fases anteriores travam quando a fase seguinte já foi jogada
+    if (partida.proximoJogoId) {
+      const proximoJogo = partidas.find((p) => p.id === partida.proximoJogoId);
+      if (proximoJogo && proximoJogo.finalizada) {
+        return true;
+      }
+    }
+
+    // Regra 3: A grande Final trava assim que for finalizada
+    const ehFinal = partida.fase === "Final";
+    if (ehFinal && partida.finalizada) {
+      return true;
+    }
+
+    return false;
+  }
+
   function atualizarResultadoPartida(
     idPartida,
     golsMandante,
@@ -467,6 +517,14 @@ export default function PaginaGerenciarLiga() {
     penaltisMandante = null,
     penaltisVisitante = null,
   ) {
+    // TRAVA DE SEGURANÇA: impede edições se a fase seguinte já começou
+    if (partidaEstaBloqueadaParaEdicao(partidaAtual)) {
+      alert(
+        "Esta partida não pode mais ser editada porque a fase seguinte já está em andamento!",
+      );
+      return;
+    }
+
     const golsMandanteNum = Number(golsMandante);
     const golsVisitanteNum = Number(golsVisitante);
     const partidaAtual = partidas.find((p) => p.id === idPartida);
@@ -687,15 +745,26 @@ export default function PaginaGerenciarLiga() {
       <HeaderDashbord />
 
       <main className="max-w-6xl mx-auto p-4 sm:p-8">
-        <Link
-          to="/dashbord"
-          className="group inline-flex items-center gap-2 text-xs font-semibold text-slate-500 hover:text-green-600 transition-colors mb-6"
-        >
-          <span className="p-1 rounded-md bg-white border border-slate-200 group-hover:border-green-300">
-            ←
-          </span>
-          Voltar para Minhas Ligas
-        </Link>
+        <div className="flex items-center justify-between mb-6">
+          <Link
+            to="/dashbord"
+            className="group inline-flex items-center gap-2 text-xs font-semibold text-slate-500 hover:text-green-600 transition-colors"
+          >
+            <span className="p-1 rounded-md bg-white border border-slate-200 group-hover:border-green-300">
+              ←
+            </span>
+            Voltar para Minhas Ligas
+          </Link>
+
+          <button
+            type="button"
+            onClick={handleExcluirLiga}
+            className="text-xs font-semibold text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 border border-red-200/60 px-3 py-1.5 rounded-xl transition-all cursor-pointer flex items-center gap-1.5 active:scale-95"
+          >
+            <span>🗑️</span>
+            Excluir Liga
+          </button>
+        </div>
 
         {/* 1. Header do Campeonato */}
         <div className="bg-white border border-slate-200/80 rounded-3xl p-6 sm:p-8 shadow-xs mb-8 flex flex-col md:flex-row md:items-center justify-between gap-6 relative overflow-hidden">
@@ -976,6 +1045,7 @@ export default function PaginaGerenciarLiga() {
                   partidas={isMataMata ? partidas : partidasDoMataMata}
                   onSalvarResultado={atualizarResultadoPartida}
                   jogadores={jogadores}
+                  verificarBloqueio={partidaEstaBloqueadaParaEdicao}
                 />
               </div>
             ) : (
@@ -983,6 +1053,7 @@ export default function PaginaGerenciarLiga() {
                 partidas={isGrupos ? partidasDosGrupos : partidas}
                 onSalvarResultado={atualizarResultadoPartida}
                 jogadores={jogadores}
+                verificarBloqueio={partidaEstaBloqueadaParaEdicao}
               />
             )}
           </div>

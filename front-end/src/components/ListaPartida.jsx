@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-export function ListaPartida({ partidas, jogadores = [], onSalvarResultado }) {
+export function ListaPartida({ partidas, jogadores = [], onSalvarResultado, verificarBloqueio }) {
   // Guarda o ID da partida que está com o formulário aberto
   const [idPartidaEmEdicao, setIdPartidaEmEdicao] = useState(null);
 
@@ -127,6 +127,9 @@ export function ListaPartida({ partidas, jogadores = [], onSalvarResultado }) {
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {partidas.map((partida) => {
         const estaEmEdicao = partida.id === idPartidaEmEdicao;
+
+        // Verifica se a partida atual está bloqueada para alterações
+        const estaBloqueada = verificarBloqueio ? verificarBloqueio(partida) : false;
 
         const elencoMandante = jogadores.filter((j) => j.idTime === partida.idMandante);
         const elencoVisitante = jogadores.filter((j) => j.idTime === partida.idVisitante);
@@ -304,7 +307,11 @@ export function ListaPartida({ partidas, jogadores = [], onSalvarResultado }) {
             {/* Rodapé com Ações: Lançar Placar ou Editar Resultado */}
             {!estaEmEdicao && (
               <div className="mt-5 pt-3 border-t border-slate-100 flex justify-end">
-                {partida.finalizada ? (
+                {estaBloqueada ? (
+                  <span className="text-xs font-semibold text-slate-400 flex items-center gap-1">
+                    🔒 Fase encerrada
+                  </span>
+                ) : partida.finalizada ? (
                   <button
                     type="button"
                     onClick={() => handleIniciarEdicao(partida)}
