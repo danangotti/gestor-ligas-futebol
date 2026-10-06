@@ -8,13 +8,23 @@
     ".NETCoreApp,Version=v10.0": {
       "GestorLigas.API/1.0.0": {
         "dependencies": {
+          "BCrypt.Net-Next": "4.2.0",
           "Microsoft.AspNetCore.OpenApi": "10.0.11",
           "Npgsql": "10.0.3",
           "Npgsql.EntityFrameworkCore.PostgreSQL": "10.0.3",
+          "RegrasDeNegocioPOO": "1.0.0",
           "Swashbuckle.AspNetCore": "10.2.3"
         },
         "runtime": {
           "GestorLigas.API.dll": {}
+        }
+      },
+      "BCrypt.Net-Next/4.2.0": {
+        "runtime": {
+          "lib/net10.0/BCrypt-Net-Next.dll": {
+            "assemblyVersion": "4.2.0.0",
+            "fileVersion": "4.2.0.0"
+          }
         }
       },
       "Microsoft.AspNetCore.OpenApi/10.0.11": {
@@ -123,6 +133,14 @@
             "fileVersion": "10.2.3.2721"
           }
         }
+      },
+      "RegrasDeNegocioPOO/1.0.0": {
+        "runtime": {
+          "RegrasDeNegocioPOO.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
       }
     }
   },
@@ -131,6 +149,13 @@
       "type": "project",
       "serviceable": false,
       "sha512": ""
+    },
+    "BCrypt.Net-Next/4.2.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-gwLD2KfCuwQesP17aVh4h6lpiMPEVt5Lbpndo0ej903hNUUTtyxt3ARdDjmuydBRTAUICc7OVKVbaOvc6SQYXA==",
+      "path": "bcrypt.net-next/4.2.0",
+      "hashPath": "bcrypt.net-next.4.2.0.nupkg.sha512"
     },
     "Microsoft.AspNetCore.OpenApi/10.0.11": {
       "type": "package",
@@ -208,6 +233,11 @@
       "sha512": "sha512-nthWONRs/FJ4yyG206g1cC52WEG8EqrjuMWjGdR+5XG7lbjFto6NqcI9EMICgVFom/UivIjUVwI76ZHbHwTPfQ==",
       "path": "swashbuckle.aspnetcore.swaggerui/10.2.3",
       "hashPath": "swashbuckle.aspnetcore.swaggerui.10.2.3.nupkg.sha512"
+    },
+    "RegrasDeNegocioPOO/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
     }
   }
 }

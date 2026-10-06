@@ -1,9 +1,10 @@
 {
   "version": 2,
-  "dgSpecHash": "U2/YFUIDX3Q=",
+  "dgSpecHash": "J4X2eo2Z2rE=",
   "success": true,
-  "projectFilePath": "c:\\Users\\dan\\gestor-ligas-futebol\\back-end\\P1-GestorDeLigas\\GestorLigas.API\\GestorLigas.API.csproj",
+  "projectFilePath": "C:\\Users\\dan\\gestor-ligas-futebol\\back-end\\P1-GestorDeLigas\\GestorLigas.API\\GestorLigas.API.csproj",
   "expectedPackageFiles": [
+    "C:\\Users\\dan\\.nuget\\packages\\bcrypt.net-next\\4.2.0\\bcrypt.net-next.4.2.0.nupkg.sha512",
     "C:\\Users\\dan\\.nuget\\packages\\microsoft.aspnetcore.openapi\\10.0.11\\microsoft.aspnetcore.openapi.10.0.11.nupkg.sha512",
     "C:\\Users\\dan\\.nuget\\packages\\microsoft.entityframeworkcore\\10.0.4\\microsoft.entityframeworkcore.10.0.4.nupkg.sha512",
     "C:\\Users\\dan\\.nuget\\packages\\microsoft.entityframeworkcore.abstractions\\10.0.4\\microsoft.entityframeworkcore.abstractions.10.0.4.nupkg.sha512",
