@@ -2,29 +2,44 @@ using Npgsql;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// 1. Configura a política de CORS para permitir requisições do React
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("PermitirFrontend", politica =>
+    {
+        politica.WithOrigins("http://localhost:5173") // Porta padrão do Vite / React
+                .AllowAnyHeader()
+                .AllowAnyMethod();
+    });
+});
+
 // Adiciona os serviços da API
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(); // Ativa a geração da documentação Swagger
+builder.Services.AddSwaggerGen(); // Documentação Swagger
 
-// 1. Obtém a String de Conexão do appsettings.json (gestor_ligas.db)
+// 2. Obtém a String de Conexão do appsettings.json
 var connectionString = builder.Configuration.GetConnectionString("ConexaoPostgres");
 
-// 2. Registra o NpgsqlDataSource nos serviços
+// 3. Registra o NpgsqlDataSource nos serviços para ser injetado nos Controllers
 var dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionString);
 var dataSource = dataSourceBuilder.Build();
 builder.Services.AddSingleton(dataSource);
 
 var app = builder.Build();
 
-// Configuração da interface visual do Swagger no ambiente de desenvolvimento
+// Configuração visual do Swagger
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI(); // Cria a página visual no caminho /swagger
+    app.UseSwaggerUI();
 }
 
 app.UseHttpsRedirection();
+
+// 4. ATIVA A POLÍTICA DE CORS (deve ficar antes de MapControllers)
+app.UseCors("PermitirFrontend");
+
 app.UseAuthorization();
 app.MapControllers();
 

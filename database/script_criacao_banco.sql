@@ -1,29 +1,41 @@
-﻿-- 1. Ligas
+﻿-- 1. Limpeza preventiva (ordem inversa de dependência)
+DROP TABLE IF EXISTS gol_partida CASCADE;
+DROP TABLE IF EXISTS partida CASCADE;
+DROP TABLE IF EXISTS jogador CASCADE;
+DROP TABLE IF EXISTS time CASCADE;
+DROP TABLE IF EXISTS liga CASCADE;
+DROP TABLE IF EXISTS usuario CASCADE;
+
+-- 2. Tabela de Usuários (Dono da conta)
+CREATE TABLE usuario (
+    id_usuario SERIAL PRIMARY KEY,
+    nome_usuario VARCHAR(100) NOT NULL,
+    email VARCHAR(150) NOT NULL UNIQUE,
+    senha_hash VARCHAR(255) NOT NULL,
+    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 3. Tabela de Ligas
 CREATE TABLE liga (
     id_liga SERIAL PRIMARY KEY,
     nome_liga VARCHAR(100) NOT NULL,
     formato VARCHAR(50) NOT NULL, -- 'Pontos Corridos', 'Mata-Mata', 'Fase de Grupos + Mata-Mata'
     quantidade_times INT NOT NULL,
     status_competicao VARCHAR(30) DEFAULT 'Não iniciada',
-    -- Campos específicos para formatos com grupos (podem ser nulos se for mata-mata puro ou pontos corridos)
-    qtd_grupos INT,
-    classificados_por_grupo INT,
-    turno_grupos VARCHAR(30)
+    id_usuario INT NOT NULL,
+    CONSTRAINT fk_liga_usuario FOREIGN KEY (id_usuario) REFERENCES usuario(id_usuario) ON DELETE CASCADE
 );
 
--- 2. Times
+-- 4. Tabela de Times
 CREATE TABLE time (
     id_time SERIAL PRIMARY KEY,
     nome_time VARCHAR(100) NOT NULL,
-    sigla VARCHAR(5),
-    cor VARCHAR(20),
     cidade VARCHAR(100),
-    grupo VARCHAR(2), 
     id_liga INT NOT NULL,
     CONSTRAINT fk_time_liga FOREIGN KEY (id_liga) REFERENCES liga(id_liga) ON DELETE CASCADE
 );
 
--- 3. Jogadores
+-- 5. Tabela de Jogadores
 CREATE TABLE jogador (
     id_jogador SERIAL PRIMARY KEY,
     nome_jogador VARCHAR(100) NOT NULL,
@@ -33,11 +45,11 @@ CREATE TABLE jogador (
     CONSTRAINT fk_jogador_time FOREIGN KEY (id_time) REFERENCES time(id_time) ON DELETE CASCADE
 );
 
--- 4. Partidas
+-- 6. Tabela de Partidas (Confrontos do campeonato)
 CREATE TABLE partida (
     id_partida SERIAL PRIMARY KEY,
     id_liga INT NOT NULL,
-    fase VARCHAR(50) NOT NULL, -- 'Rodada', 'Grupo A', 'Semifinal', 'Final', etc.
+    fase VARCHAR(50) NOT NULL, -- 'Rodada 1', 'Quartas de Final', 'Final', etc.
     rodada INT,
     id_mandante INT,
     id_visitante INT,
@@ -57,12 +69,13 @@ CREATE TABLE partida (
     CONSTRAINT fk_partida_proximo_jogo FOREIGN KEY (proximo_jogo_id) REFERENCES partida(id_partida) ON DELETE SET NULL
 );
 
--- 5. Registro de Gols da Partida (Artilharia detalhada)
+-- 7. Tabela de Gols da Partida (Artilharia do campeonato)
 CREATE TABLE gol_partida (
     id_gol SERIAL PRIMARY KEY,
     id_partida INT NOT NULL,
     id_jogador INT NOT NULL,
     id_time INT NOT NULL,
+    
     CONSTRAINT fk_gol_partida FOREIGN KEY (id_partida) REFERENCES partida(id_partida) ON DELETE CASCADE,
     CONSTRAINT fk_gol_jogador FOREIGN KEY (id_jogador) REFERENCES jogador(id_jogador) ON DELETE CASCADE,
     CONSTRAINT fk_gol_time FOREIGN KEY (id_time) REFERENCES time(id_time) ON DELETE CASCADE
