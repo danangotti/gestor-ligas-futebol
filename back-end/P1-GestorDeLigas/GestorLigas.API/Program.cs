@@ -3,6 +3,7 @@ using Npgsql;
 var builder = WebApplication.CreateBuilder(args);
 
 // 1. Configura a política de CORS para permitir requisições do React
+//controla quem pode fazer requisições pra minha API
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("PermitirFrontend", politica =>
