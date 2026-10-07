@@ -1,10 +1,13 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import ModalCriarLiga from "../components/ModalCriarLiga";
 import { HeaderDashbord } from "../components/HeaderDashbord";
 import { ligasIniciais } from "../dados/dadosIniciais";
+import { useNavigate } from "react-router-dom";
 
 export default function PaginaDashbord() {
+  const navegar = useNavigate();
+
   // ==========================================
   // 1. ÁREA LÓGICA (Estados e Funções Auxiliares)
   // ==========================================
@@ -18,6 +21,22 @@ export default function PaginaDashbord() {
     return salvas ? JSON.parse(salvas) : ligasIniciais;
   });
 
+  //useEffect para garantir que so veja essa tela se tiver um id
+  useEffect(
+    () => {
+      //busca o id de quem esta logado
+      const idUsuario = localStorage.getItem("idUsuario");
+
+      // se não existir nada salvo (for null), expulsa para o login
+      if (!idUsuario) {
+        alert("Acesso negado! Faça login primeiro.");
+        navegar("/login");
+      }
+    },
+    [] // Os colchetes vazios garantem que só roda ao abrir a página
+  );
+  
+  
   function salvarNovaLiga(dadosDaLiga) {
     const novaLiga = {
       id: Date.now(),

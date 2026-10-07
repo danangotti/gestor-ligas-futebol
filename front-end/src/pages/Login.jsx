@@ -8,14 +8,40 @@ export default function Login() {
   // Hook responsável pela navegação programática
   const navegar = useNavigate();
 
-  function enviarFormulario(evento) {
+  async function enviarFormulario(evento) {
     evento.preventDefault();
 
-    console.log("Enviando e-mail:", email);
-    console.log("Enviando senha:", senha);
+    // criar a variavel com o objeto que vai ser enviado(dados da conta)
+    const dadosEnvio = {
+      Email: email,
+      Senha: senha,
+    };
 
-    // Redireciona o usuário para a rota do painel
-    navegar("/dashbord");
+    // disparar o fetch, enviando os dados para a API, e guardando a resposta na variavel respostaHttp
+    const respostaHttp = await fetch("http://localhost:5155/api/usuarios/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(dadosEnvio),
+    });
+
+    // verificando se deu certo
+    //se devolver true no ok, deu certo
+    if (respostaHttp.ok) {
+      //converter os dados recebidos para json
+      const dados = await respostaHttp.json();
+
+      //guardar os dados no localstorage
+      localStorage.setItem("nomeUsuario", dados.nome);
+      localStorage.setItem("idUsuario", dados.id);
+
+      alert("Login realizado com sucesso!");
+      navegar("/dashbord");
+    } else {
+      alert("Email ou senha incorretos.");
+    }
+    
   }
 
   return (

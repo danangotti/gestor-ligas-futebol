@@ -9,13 +9,37 @@ export default function PaginaCadastro() {
   // Hook do react-router-dom para navegação programática
   const navegar = useNavigate();
 
-  function enviarFormulario(evento) {
-    evento.preventDefault();
-    console.log("Criando conta para:", nome, email, senha);
+async function enviarFormulario(evento) {
+  evento.preventDefault();
 
-    // Redireciona o novo usuário direto para o painel
-    navegar("/dashbord");
+  // criar a variavel com o objeto que vai ser enviado(dados da conta)
+  const dadosEnvio = {
+      Nome : nome,
+      Email: email,
+      Senha: senha
+  };
+
+  // disparar o fetch, enviando os dados para a API, e guardando a resposta na variavel respostaHttp
+  const respostaHttp = await fetch("http://localhost:5155/api/usuarios",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(dadosEnvio)
+    }
+  )
+  
+  
+  // verificando se deu certo
+  //se devolver true no ok, deu certo
+  if (respostaHttp.ok) {
+      alert("Conta criada com sucesso!");
+      navegar("/login"); 
+  } else {
+      alert("Erro ao criar conta. Tente outro e-mail.");
   }
+}
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4">
