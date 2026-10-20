@@ -20,12 +20,13 @@ namespace GestorLigas.API.Controllers
         public async Task<IActionResult> CriarLiga(CriarLigaDTO dados)
         {
             await using var comandoInserir = _conexaoBanco.CreateCommand
-            ("INSERT INTO liga (nome_liga, formato, quantidade_times, id_usuario) VALUES (@nomeLiga, @formato, @quantidadeTimes, @idUsuario)");
+            ("INSERT INTO liga (nome_liga, formato, quantidade_times, id_usuario, configuracao) VALUES (@nomeLiga, @formato, @quantidadeTimes, @idUsuario, @Configuracao::jsonb)");
 
             comandoInserir.Parameters.AddWithValue("@nomeLiga", dados.NomeLiga);
             comandoInserir.Parameters.AddWithValue("@formato", dados.Formato);
             comandoInserir.Parameters.AddWithValue("@quantidadeTimes", dados.QuantidadeTimes);
             comandoInserir.Parameters.AddWithValue("@idUsuario", dados.IdUsuario);
+            comandoInserir.Parameters.AddWithValue("@configuracao", dados.Configuracao.GetRawText());
 
             //executar a gravação no banco de dados -> ExecuteNonQueryAsync()
             await comandoInserir.ExecuteNonQueryAsync();

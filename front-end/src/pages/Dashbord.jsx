@@ -37,22 +37,52 @@ export default function PaginaDashbord() {
   );
   
   
-  function salvarNovaLiga(dadosDaLiga) {
-    const novaLiga = {
-      id: Date.now(),
-      nome: dadosDaLiga.nome,
+  async function salvarNovaLiga(dadosDaLiga) {
+    //Pegar e validar o usuário, id
+    const idSalvo = localStorage.getItem("idUsuario");
+    if (!idSalvo) {
+      alert("Sessão expirada. Faça login novamente.");
+      return;
+    }
+
+    //Montar o objeto com os mesmos nomes q ta no DTO do c#
+    const ligaParaCadastrar = {
+      nomeLiga: dadosDaLiga.nome,
       formato: dadosDaLiga.formato,
-      configuracao: dadosDaLiga.configuracao,
       quantidadeTimes: dadosDaLiga.configuracao.totalEquipes,
-      partidas: [],
+      idUsuario: Number(idSalvo),
     };
 
-    const listaAtualizada = [...listaDeLigas, novaLiga];
-    setListaDeLigas(listaAtualizada);
-    localStorage.setItem("ligas_cadastradas", JSON.stringify(listaAtualizada));
+    // enviar com fetch 
+    try {
+      // As chamadas de rede acontecem aqui dentro
+      const resposta = await fetch("http://localhost:5155/api/Ligas", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(ligaParaCadastrar),
+      });
 
-    setNomeLiga("");
-    setModalAberto(false);
+      if (resposta.ok) {
+        alert("Competição cadastrada com sucesso!");
+
+        // Limpa os campos controlados e fecha o modal
+        setNomeLiga("");
+        setModalAberto(false);
+      } 
+      else {
+        const dadosErro = await resposta.json();
+        alert(dadosErro.mensagem || "Falha ao cadastrar a liga.");
+      }
+
+    } catch (erroDeRede) {
+      // Só entra aqui se o back-end estiver offline ou a conexão cair
+      console.error("Falha na comunicação:", erroDeRede);
+      alert(
+        "Não foi possível conectar ao servidor. Verifique se a API está rodando.",
+      );
+    }
+
+    
   }
 
   // Estilos avançados para os status com badges modernas e pontos luminosos
