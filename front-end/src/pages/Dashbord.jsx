@@ -51,6 +51,7 @@ export default function PaginaDashbord() {
       formato: dadosDaLiga.formato,
       quantidadeTimes: dadosDaLiga.configuracao.totalEquipes,
       idUsuario: Number(idSalvo),
+      configuracao: dadosDaLiga.configuracao
     };
 
     // enviar com fetch 

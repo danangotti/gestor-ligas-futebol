@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("GestorLigas.API")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+7603bd439ea1c138862d1c3283675385134be65f")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+2a9f2d3c070ed9f40231fe40c3ac9fdb2e66cb7b")]
 [assembly: System.Reflection.AssemblyProductAttribute("GestorLigas.API")]
 [assembly: System.Reflection.AssemblyTitleAttribute("GestorLigas.API")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
