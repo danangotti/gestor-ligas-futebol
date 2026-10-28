@@ -11,6 +11,7 @@ export default function PaginaDashbord() {
   // ==========================================
   // 1. ÁREA LÓGICA (Estados e Funções Auxiliares)
   // ==========================================
+  const [ligas, setLigas] = useState([]);
   const [nomeLiga, setNomeLiga] = useState("");
   const [qtdTimes, setQtdTimes] = useState("8");
   const [formatoLiga, setFormatoLiga] = useState("Pontos corridos");
@@ -33,10 +34,9 @@ export default function PaginaDashbord() {
         navegar("/login");
       }
     },
-    [] // Os colchetes vazios garantem que só roda ao abrir a página
+    [], // Os colchetes vazios garantem que só roda ao abrir a página
   );
-  
-  
+
   async function salvarNovaLiga(dadosDaLiga) {
     //Pegar e validar o usuário, id
     const idSalvo = localStorage.getItem("idUsuario");
@@ -51,10 +51,10 @@ export default function PaginaDashbord() {
       formato: dadosDaLiga.formato,
       quantidadeTimes: dadosDaLiga.configuracao.totalEquipes,
       idUsuario: Number(idSalvo),
-      configuracao: dadosDaLiga.configuracao
+      configuracao: dadosDaLiga.configuracao,
     };
 
-    // enviar com fetch 
+    // enviar com fetch
     try {
       // As chamadas de rede acontecem aqui dentro
       const resposta = await fetch("http://localhost:5155/api/Ligas", {
@@ -69,12 +69,10 @@ export default function PaginaDashbord() {
         // Limpa os campos controlados e fecha o modal
         setNomeLiga("");
         setModalAberto(false);
-      } 
-      else {
+      } else {
         const dadosErro = await resposta.json();
         alert(dadosErro.mensagem || "Falha ao cadastrar a liga.");
       }
-
     } catch (erroDeRede) {
       // Só entra aqui se o back-end estiver offline ou a conexão cair
       console.error("Falha na comunicação:", erroDeRede);
@@ -82,8 +80,6 @@ export default function PaginaDashbord() {
         "Não foi possível conectar ao servidor. Verifique se a API está rodando.",
       );
     }
-
-    
   }
 
   // Estilos avançados para os status com badges modernas e pontos luminosos
